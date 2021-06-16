@@ -36,7 +36,7 @@ class SimpleNet(nn.Module):
         x = torch.flatten(x, 1)     # batch, channels, 1, 1
         return x
 
-if __name__ == '__main__':
+def main():
     import os
     print('working directory', os.getcwd())
 
@@ -47,4 +47,7 @@ if __name__ == '__main__':
     trainer = ImageClassificationTrainer()
 
     trainer.train(model, train_data, epoch_end_hook=None)
+
+if __name__ == '__main__':
+    main()
 

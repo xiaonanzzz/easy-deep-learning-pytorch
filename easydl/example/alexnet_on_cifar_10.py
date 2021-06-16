@@ -11,7 +11,7 @@ class SimpleNet(nn.Module):
 
     def __init__(self, num_classes: int = 1000) -> None:
         super(SimpleNet, self).__init__()
-        self.channels = min(256, num_classes * 5)
+        self.channels = 1024
         self.pooling = nn.AdaptiveMaxPool2d((1, 1))
         self.features = nn.Sequential(
             nn.Conv2d(3, self.channels, kernel_size=5, padding=2),

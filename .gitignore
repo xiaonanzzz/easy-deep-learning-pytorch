@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+easydl/example/tmp/data/cifar-10-batches-py/data_batch_1
+/easydl/example/tmp/

@@ -9,7 +9,7 @@ class OptimizerArgs():
 
 
 
-def prepare_optimizer(args, param_groups):
+def prepare_optimizer(args:OptimizerArgs, param_groups):
     if args.optimizer == 'sgd':
         opt = torch.optim.SGD(param_groups, lr=float(args.lr), weight_decay=args.weight_decay, momentum=args.momentum, nesterov=True)
     elif args.optimizer == 'adam':

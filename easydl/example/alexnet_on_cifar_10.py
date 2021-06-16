@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from torchvision.datasets import CIFAR10
 from torchvision.models import GoogLeNet
-from torchvision.transforms import ToTensor
+from torchvision.transforms import ToTensor, Normalize, Compose
 from easydl.trainer.image_classification import ImageClassificationTrainer
 from torch import nn
 
@@ -40,8 +40,8 @@ def main():
     import os
     print('working directory', os.getcwd())
 
-    train_data = CIFAR10('tmp/data', train=True, download=True, transform=ToTensor())
-    print('data shape', train_data[0][0].shape)
+    train_data = CIFAR10('tmp/data', train=True, download=True, transform=Compose([ToTensor(), Normalize([0.5, 0.5, 0.5], [0.1, 0.1, 0.1])]))
+    print('data shape', train_data[0][0].shape, train_data[0])
     model = SimpleNet(10)
 
     trainer = ImageClassificationTrainer()

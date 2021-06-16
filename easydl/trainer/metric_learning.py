@@ -122,7 +122,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(OptimizerArgs, LRSchedulerArgs):
 
             if epoch_end_hook is not None:
                 print('epoch done. calling hook function')
-                epoch_end_hook(context={'epoch': epoch})
+                epoch_end_hook(locals=locals())
 
 
 

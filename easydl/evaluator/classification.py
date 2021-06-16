@@ -8,7 +8,6 @@ class ClassificationModelEvaluator(DeviceConfig):
         self.test_dataset = test_dataset
         self.accuracy = 0
         self.batch_size = 32
-        self.device =
         self.ypred = None
         self.ytrue = None
 

@@ -3,9 +3,8 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from collections import Counter
 
-def evaluate_clustering_with_labels(ytrue, ycluster, metrics=[
-    'precision', 'class_to_cluster_raio',
-    'adjusted_mutual_info_score', 'fowlkes_mallows_score', 'pure_rate']):
+
+def evaluate_clustering_with_labels(ytrue, ycluster):
     true_label_encoder = LabelEncoder()
     cluster_label_encoder = LabelEncoder()
 
@@ -32,6 +31,4 @@ def evaluate_clustering_with_labels(ytrue, ycluster, metrics=[
 
     result['class_to_cluster_raio'] = len(set(ytrue_int)) / len(set(ycluster_int))
 
-    return {k: v for k, v in result.items() if k in metrics}
-
-
+    return result

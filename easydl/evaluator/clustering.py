@@ -32,3 +32,4 @@ def evaluate_clustering_with_labels(ytrue, ycluster):
     result['class_to_cluster_raio'] = len(set(ytrue_int)) / len(set(ycluster_int))
 
     return result
+

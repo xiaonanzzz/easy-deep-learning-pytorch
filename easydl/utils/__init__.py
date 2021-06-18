@@ -27,3 +27,28 @@ def l2_norm(input):
     _output = torch.div(input, norm.view(-1, 1).expand_as(input))
     output = _output.view(input_size)
     return output
+
+class StringTextfileSaver():
+    def __init__(self, filepath):
+        self.filepath = filepath
+
+    def save(self, obj):
+        with open(self.filepath, 'w') as f:
+            f.write(str(obj))
+
+class ModelSaver():
+    def __init__(self, filepath):
+        self.filepath = filepath
+
+    def save(self, model):
+        torch.save(model.state_dict(), self.filepath)
+
+
+class ModelLoader():
+    def __init__(self, filepath):
+        self.filepath = filepath
+
+    def load(self, model):
+        model.load_state_dict(torch.load(self.filepath))
+
+

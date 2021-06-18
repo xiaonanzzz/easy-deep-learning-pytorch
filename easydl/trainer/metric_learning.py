@@ -7,6 +7,7 @@ from torch.utils.data.sampler import BatchSampler
 from easydl.utils import l2_norm, binarize
 from easydl.trainer.optimizer import OptimizerArgs, prepare_optimizer
 from easydl.trainer.lr_scheduler import prepare_lr_scheduler, LRSchedulerArgs
+from easydl.trainer import EpochTrainer
 
 from tqdm import *
 
@@ -46,7 +47,7 @@ class ProxyAnchorLoss(torch.nn.Module):
         return loss
 
 
-class ProxyAnchorLossEmbeddingModelTrainer(OptimizerArgs, LRSchedulerArgs):
+class ProxyAnchorLossEmbeddingModelTrainer(OptimizerArgs, LRSchedulerArgs, EpochTrainer):
     def __init__(self):
         super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__()
         self.mrg = 0.1
@@ -61,11 +62,18 @@ class ProxyAnchorLossEmbeddingModelTrainer(OptimizerArgs, LRSchedulerArgs):
         self.batch_size = 16
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+        # run time arguments
+        self.model = None           # take input from train_dataset[i][0], generate embedding vector of D
+        self.train_dataset = None   # train_dataset[i][0] is input data, train_dataset[i][1] is label int
+        self.sz_embedding = None    # number of dimensions in embedding D
+        self.nb_classes = None      # number of classes in set( train_dataset[i][1] )
 
-    def train(self, model, train_dataset, sz_embedding, nb_classes, epoch_end_hook=None):
+    def train(self):
         args = self
+        model = self.model
+        train_dataset = self.train_dataset
 
-        criterion = ProxyAnchorLoss(nb_classes=nb_classes, sz_embed=sz_embedding, mrg=self.mrg,
+        criterion = ProxyAnchorLoss(nb_classes=self.nb_classes, sz_embed=self.sz_embedding, mrg=self.mrg,
                                         alpha=self.alpha)
 
         param_groups = [{'params': model.parameters(), 'lr': float(args.lr) * 1},
@@ -120,12 +128,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(OptimizerArgs, LRSchedulerArgs):
             pbar.close()
             scheduler.step()
 
-            if epoch_end_hook is not None:
+            if self.epoch_end_hook is not None:
                 print('epoch done. calling hook function')
+                epoch_end_hook = self.epoch_end_hook
                 epoch_end_hook(locals=locals())
-
-
-
-
-
-

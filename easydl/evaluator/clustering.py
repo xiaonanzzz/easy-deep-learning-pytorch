@@ -12,6 +12,8 @@ def evaluate_clustering_with_labels(ytrue, ycluster):
     ycluster_int = cluster_label_encoder.fit_transform(ycluster)
 
     result = {}
+    result['clusters'] = len(set(ycluster_int))
+    result['classes'] = len(set(ytrue_int))
     result['adjusted_mutual_info_score'] = adjusted_mutual_info_score(ytrue_int, ycluster_int)
     result['fowlkes_mallows_score'] = fowlkes_mallows_score(ytrue_int, ycluster_int)
 
@@ -28,8 +30,8 @@ def evaluate_clustering_with_labels(ytrue, ycluster):
             pure_count += sum(c.values())
     result['precision'] = num_correct / len(ytrue_int)
     result['pure_rate'] = pure_count / len(ytrue_int)
-
     result['class_to_cluster_raio'] = len(set(ytrue_int)) / len(set(ycluster_int))
+    result['pure_times_class_cluster_ratio'] = result['pure_rate'] * result['class_to_cluster_raio']
 
     return result
 

@@ -1,7 +1,8 @@
 import torch
 
-class OptimizerArgs():
+class OptimizerArgs(object):
     def __init__(self):
+        super(OptimizerArgs, self).__init__()
         self.optimizer = 'sgd'
         self.lr = 0.1
         self.weight_decay = 1e-4

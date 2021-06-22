@@ -47,7 +47,7 @@ class ProxyAnchorLoss(torch.nn.Module):
         return loss
 
 
-class ProxyAnchorLossEmbeddingModelTrainer(OptimizerArgs, LRSchedulerArgs, EpochTrainer):
+class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedulerArgs):
     def __init__(self):
         super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__()
         self.mrg = 0.1

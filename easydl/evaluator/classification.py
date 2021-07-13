@@ -18,6 +18,6 @@ class ClassificationModelEvaluator(DeviceConfig):
         ytrue = torch.cat(ys, dim=0)
         print(ypred.shape, ytrue.shape)
 
-        self.accuracy = torch.mean((ypred == ytrue).double())
+        self.accuracy = float(torch.mean((ypred == ytrue).double()))
         self.ypred = ypred
         self.ytrue = ytrue

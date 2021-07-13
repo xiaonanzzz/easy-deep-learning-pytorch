@@ -4,13 +4,12 @@ from .lr_scheduler import prepare_lr_scheduler, LRSchedulerArgs
 from tqdm import tqdm
 import numpy as np
 from easydl.config import DeviceConfig
+from . import EpochTrainer
 
 
-class ImageClassificationTrainer(DeviceConfig):
+class ImageClassificationTrainer(EpochTrainer, DeviceConfig, OptimizerArgs, LRSchedulerArgs):
     def __init__(self):
         super(ImageClassificationTrainer, self).__init__()
-        self.optimizer_args = OptimizerArgs()
-        self.lr_scheduler_args = LRSchedulerArgs()
         self.batch_size = 32
         self.nb_epochs = 30
         self.nb_workers = 8 if torch.cuda.is_available() else 0
@@ -20,11 +19,11 @@ class ImageClassificationTrainer(DeviceConfig):
 
         criterion = torch.nn.CrossEntropyLoss()
 
-        param_groups = [{'params': model.parameters(), 'lr': float(args.optimizer_args.lr) * 1}]
+        param_groups = [{'params': model.parameters(), 'lr': float(args.lr) * 1}]
 
-        opt = prepare_optimizer(self.optimizer_args, param_groups)
+        opt = prepare_optimizer(self, param_groups)
 
-        scheduler = prepare_lr_scheduler(self.lr_scheduler_args, opt)
+        scheduler = prepare_lr_scheduler(self, opt)
 
         print("Training parameters: {}".format(vars(args)))
 

@@ -26,7 +26,7 @@ class RetrivalMetrics(DeviceConfig):
         qy_ext = torch.unsqueeze(self.qy, dim=1)
         match_mat = qy_ext == topk_ys
         match_mat = match_mat.sum(dim=1) > 0
-        match = match_mat.sum()
+        match = match_mat.sum().item()
 
         return match / total
 

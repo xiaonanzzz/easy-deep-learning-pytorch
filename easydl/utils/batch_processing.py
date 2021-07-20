@@ -3,6 +3,17 @@ from tqdm import tqdm
 
 def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_index=1,
                              device=torch.device('cpu'), out_device=torch.device('cpu')):
+    """
+
+    :param dataset:         a pytorch dataset class, e.g. ds[index] -> x0, x1, x2, ...
+    :param model:           a pytorch model, which can transform x into a tensor/score
+    :param input_index:     which one is the input value of model
+    :param batch_size:
+    :param save_index:      which index/indices should be kept and return
+    :param device:          which device to run the model
+    :param out_device:      which device to save the result
+    :return:
+    """
     dl = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,

@@ -14,5 +14,16 @@ def debug_proxy_anchor_loss_algo():
     trainer.nb_epochs = 10
     trainer.train(model, dataset, 200, 10)
 
+def debug_retrieval_accuracy():
+
+    from easydl.evaluator.metrics import RetrivalMetrics
+    qx = torch.FloatTensor([[0, 1,], [1, 1], [1, 0]])
+    qy = torch.LongTensor([0, 1, 2])
+
+    met = RetrivalMetrics(qx, qy, qx, qy, ignore_k=1)
+    print('recall@1', met.recall_k(1))
+    print('recall@2', met.recall_k(2))
+
+
 if __name__ == '__main__':
-    debug_proxy_anchor_loss_algo()
+    debug_retrieval_accuracy()

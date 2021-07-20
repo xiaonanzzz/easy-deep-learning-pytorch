@@ -2,6 +2,7 @@ from easydl.config import DeviceConfig
 import torch
 import torch.nn.functional as F
 
+
 class RetrivalMetrics(DeviceConfig):
     def __init__(self, qx, qy, ix, iy, metric='cosine', ignore_k=0):
         super(RetrivalMetrics, self).__init__()
@@ -28,6 +29,6 @@ class RetrivalMetrics(DeviceConfig):
         match_mat = match_mat.sum(dim=1) > 0
         match = match_mat.sum().item()
 
-        return match / total
+        return float(match) / float(total)
 
 

@@ -101,7 +101,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
             model.train()
             model.to(self.device)
             criterion.to(self.device)
-            pbar = tqdm(enumerate(dl_tr))
+            pbar = tqdm(enumerate(dl_tr), total=len(dl_tr))
             for batch_idx, (x, y) in pbar:
                 assert torch.isnan(x).sum() == 0
                 m = model(x.to(self.device))
@@ -123,10 +123,9 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
                 opt.step()
 
                 pbar.set_description(
-                    'Train Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
-                        epoch, batch_idx + 1, len(dl_tr),
-                        100. * batch_idx / len(dl_tr),
-                        np.mean(losses_per_epoch)))
+                    'Train Epoch: {} Loss: {:.6f}'.format(
+                        epoch,
+                        np.mean(losses_per_epoch)), refresh=False)
             pbar.close()
             scheduler.step()
 

@@ -4,10 +4,10 @@ import torch
 from .metrics import RetrivalMetrics
 
 class MetricLearningModelEvaluatorSingleSet(DeviceConfig):
-    def __init__(self, test_dataset, k_values=[1]):
+    def __init__(self, test_dataset, k_values=[1], batch_size=32):
         super(MetricLearningModelEvaluatorSingleSet, self).__init__()
         self.test_dataset = test_dataset
-        self.batch_size = 32
+        self.batch_size = batch_size
 
         self.recall_at_k = {k: 0 for k in k_values}
 

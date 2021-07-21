@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import random
 import numpy as np
 from torch.utils.data.sampler import BatchSampler
+
+from easydl.evaluator import MetricLearningModelEvaluatorSingleSet
 from easydl.utils import l2_norm, binarize
 from easydl.trainer.optimizer import OptimizerArgs, prepare_optimizer
 from easydl.trainer.lr_scheduler import prepare_lr_scheduler, LRSchedulerArgs
@@ -48,8 +50,8 @@ class ProxyAnchorLoss(torch.nn.Module):
 
 
 class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedulerArgs):
-    def __init__(self):
-        super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__()
+    def __init__(self, model, train_dataset, sz_embedding, nb_classes, *args, **kwargs):
+        super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__(*args, **kwargs)
         self.mrg = 0.1
         self.alpha = 32
         self.lr = 1e-4
@@ -63,10 +65,10 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # run time arguments
-        self.model = None           # take input from train_dataset[i][0], generate embedding vector of D
-        self.train_dataset = None   # train_dataset[i][0] is input data, train_dataset[i][1] is label int
-        self.sz_embedding = None    # number of dimensions in embedding D
-        self.nb_classes = None      # number of classes in set( train_dataset[i][1] )
+        self.model = model           # take input from train_dataset[i][0], generate embedding vector of D
+        self.train_dataset = train_dataset   # train_dataset[i][0] is input data, train_dataset[i][1] is label int
+        self.sz_embedding = sz_embedding    # number of dimensions in embedding D
+        self.nb_classes = nb_classes      # number of classes in set( train_dataset[i][1] )
 
     def train(self):
         args = self
@@ -132,3 +134,24 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
                 print('epoch done. calling hook function')
                 epoch_end_hook = self.epoch_end_hook
                 epoch_end_hook(locals=locals())
+
+
+class EpochEndEvaluationHook(object):
+    def __init__(self, model, testds):
+        """
+
+        :param model:           pytorch embedder model x -> x'
+        :param testds:          testing dataset,  testds[i] -> x, y
+        """
+        self.model = model
+        self.testds = testds
+        self.recall_at_k_list = []      # each one is a dictionary {'k': value}
+
+    def __call__(self, *args, **kwargs):
+        model = self.model
+        model.eval()
+        eval = MetricLearningModelEvaluatorSingleSet(self.testds)
+        eval.evaluate(model)
+        model.train()
+        self.recall_at_k_list.append(eval.recall_at_k)
+        print('epoch', len(self.recall_at_k_list), self.recall_at_k_list[-1])

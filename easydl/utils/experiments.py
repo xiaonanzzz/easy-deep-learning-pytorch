@@ -1,5 +1,5 @@
 import os
-
+import sys
 
 class ExpFolderLogger(object):
     def __init__(self):
@@ -8,6 +8,11 @@ class ExpFolderLogger(object):
         self.log_fname = 'exp-log.txt'
         self.log_path = None
         self.log_fobj = None
+        self.redirect_print = True
+
+    @property
+    def logfile(self):
+        return self.log_fobj
 
     def prepare_folder_logger(self):
         os.makedirs(self.exp_dir, exist_ok=True)
@@ -22,4 +27,5 @@ class ExpFolderLogger(object):
 
     def print(self, *args, **kwargs):
         print(*args, **kwargs)
-        print(*args, file=self.log_fobj, **kwargs)
+        if self.redirect_print:
+            print(*args, file=self.log_fobj, **kwargs)

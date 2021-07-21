@@ -1,12 +1,12 @@
 import torch
 
 class OptimizerArgs(object):
-    def __init__(self):
-        super(OptimizerArgs, self).__init__()
-        self.optimizer = 'sgd'
-        self.lr = 0.1
-        self.weight_decay = 1e-4
-        self.momentum = 0.9
+    def __init__(self, *args, optimizer='sgd', lr=0.1, weight_decay=1e-4, momentum=0.9, **kwargs):
+        super(OptimizerArgs, self).__init__(*args, **kwargs)
+        self.optimizer = optimizer
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.momentum = momentum
 
 
 

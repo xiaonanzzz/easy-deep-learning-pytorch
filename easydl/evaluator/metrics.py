@@ -4,6 +4,11 @@ import torch.nn.functional as F
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
+class RetrivalMetricsBase(object):
+
+    def recall_k(self, k):
+        pass
+
 class RetrivalMetrics(DeviceConfig):
     def __init__(self, qx, qy, ix, iy, metric='cosine', ignore_k=0):
         super(RetrivalMetrics, self).__init__()

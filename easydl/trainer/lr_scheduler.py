@@ -7,7 +7,7 @@ def prepare_lr_scheduler(args, opt):
 
 
 class LRSchedulerArgs(object):
-    def __init__(self):
-        super(LRSchedulerArgs, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(LRSchedulerArgs, self).__init__(*args, **kwargs)
         self.lr_decay_step = 10
         self.lr_decay_gamma = 0.5

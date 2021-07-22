@@ -1,6 +1,6 @@
 from easydl.models.linear import LinearEmbedder
 import torch
-from easydl.trainer.metric_learning import ProxyAnchorLossEmbeddingModelTrainer
+from easydl.trainer.metric_learning import ProxyAnchorLossEmbeddingModelTrainer, EpochEndEvaluationHook
 
 
 def debug_proxy_anchor_loss_algo():
@@ -10,9 +10,11 @@ def debug_proxy_anchor_loss_algo():
     print('data shape', x.shape, y.shape,)
     dataset = torch.utils.data.TensorDataset(x, y)
 
-    trainer = ProxyAnchorLossEmbeddingModelTrainer()
+    trainer = ProxyAnchorLossEmbeddingModelTrainer(model, dataset, 200, 10, tqdm_disable=True)
     trainer.nb_epochs = 10
-    trainer.train(model, dataset, 200, 10)
+    trainer.epoch_end_hook = EpochEndEvaluationHook(model, dataset, tqdm_disable=True)
+
+    trainer.train()
 
 def debug_retrieval_accuracy():
 
@@ -26,4 +28,4 @@ def debug_retrieval_accuracy():
 
 
 if __name__ == '__main__':
-    debug_retrieval_accuracy()
+    debug_proxy_anchor_loss_algo()

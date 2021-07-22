@@ -10,6 +10,7 @@ from easydl.utils import l2_norm, binarize
 from easydl.trainer.optimizer import OptimizerArgs, prepare_optimizer
 from easydl.trainer.lr_scheduler import prepare_lr_scheduler, LRSchedulerArgs
 from easydl.trainer import EpochTrainer
+from easydl.config import TqdmConfig
 
 from tqdm import *
 
@@ -49,7 +50,7 @@ class ProxyAnchorLoss(torch.nn.Module):
         return loss
 
 
-class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedulerArgs):
+class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedulerArgs, TqdmConfig):
     def __init__(self, model, train_dataset, sz_embedding, nb_classes, *args, **kwargs):
         super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__(*args, **kwargs)
         self.mrg = 0.1
@@ -101,7 +102,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
             model.train()
             model.to(self.device)
             criterion.to(self.device)
-            pbar = tqdm(enumerate(dl_tr), total=len(dl_tr))
+            pbar = tqdm(enumerate(dl_tr), total=len(dl_tr), disable=self.tqdm_disable)
             for batch_idx, (x, y) in pbar:
                 assert torch.isnan(x).sum() == 0
                 m = model(x.to(self.device))
@@ -135,13 +136,14 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
                 epoch_end_hook(locals=locals())
 
 
-class EpochEndEvaluationHook(object):
-    def __init__(self, model, testds):
+class EpochEndEvaluationHook(TqdmConfig):
+    def __init__(self, model, testds, *args, **kwargs):
         """
 
         :param model:           pytorch embedder model x -> x'
         :param testds:          testing dataset,  testds[i] -> x, y
         """
+        super(EpochEndEvaluationHook, self).__init__(*args, **kwargs)
         self.model = model
         self.testds = testds
         self.recall_at_k_list = []      # each one is a dictionary {'k': value}

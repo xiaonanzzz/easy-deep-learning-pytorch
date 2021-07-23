@@ -1,5 +1,4 @@
 
-
 def check_RetrivalMetricsFaiss():
     import torch
     from easydl.evaluator.metrics import RetrivalMetricsSklearn
@@ -16,7 +15,14 @@ def check_RetrivalMetricsFaiss():
 
     print('check_RetrivalMetricsFaiss done')
 
+def check_timer():
+    from easydl.utils import TimerContext
+    import time
+    with TimerContext(name='timer 1'):
+        time.sleep(10)
+
 def fast_checks():
+    check_timer()
     check_RetrivalMetricsFaiss()
 
 if __name__ == '__main__':

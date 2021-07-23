@@ -2,6 +2,9 @@ from .batch_processing import *
 import random
 import numpy as np
 from .experiments import *
+import time
+import datetime
+
 
 def set_random_seed(seed):
     random.seed(seed)
@@ -52,3 +55,20 @@ class ModelLoader():
         model.load_state_dict(torch.load(self.filepath))
 
 
+class TimerContext(object):
+    def __init__(self, print=True, name='<not named>'):
+        self.start = 0
+        self.end = 0
+        self.print_time_use = print
+        self.timer_name = name
+
+    @property
+    def timespan(self):
+        return str(datetime.timedelta(seconds=self.end-self.start))
+
+    def __enter__(self):
+        self.start = time.time()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.end = time.time()
+        print('time used by [{}] [{}]'.format(self.timer_name, self.timespan))

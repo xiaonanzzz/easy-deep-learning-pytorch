@@ -103,6 +103,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
             model.to(self.device)
             criterion.to(self.device)
             pbar = tqdm(enumerate(dl_tr), total=len(dl_tr), disable=self.tqdm_disable)
+
             for batch_idx, (x, y) in pbar:
                 assert torch.isnan(x).sum() == 0
                 m = model(x.to(self.device))
@@ -127,11 +128,11 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
                     'Train Epoch: {} Loss: {:.6f}'.format(
                         epoch,
                         np.mean(losses_per_epoch)), refresh=False)
+            print('training epoch ', epoch, 'mean loss', np.mean(losses_per_epoch))
             pbar.close()
             scheduler.step()
 
             if self.epoch_end_hook is not None:
-                print('epoch done. calling hook function')
                 epoch_end_hook = self.epoch_end_hook
                 epoch_end_hook(locals=locals())
 
@@ -155,4 +156,4 @@ class EpochEndEvaluationHook(TqdmConfig):
         eval.evaluate(model)
         model.train()
         self.recall_at_k_list.append(eval.recall_at_k)
-        print('epoch', len(self.recall_at_k_list), self.recall_at_k_list[-1])
+        print('EpochEndEvaluationHook epoch', len(self.recall_at_k_list), 'recall at k', self.recall_at_k_list[-1])

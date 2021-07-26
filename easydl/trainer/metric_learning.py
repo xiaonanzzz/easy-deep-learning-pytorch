@@ -53,6 +53,10 @@ class ProxyAnchorLoss(torch.nn.Module):
 class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedulerArgs, TqdmConfig):
     def __init__(self, model, train_dataset, sz_embedding, nb_classes, *args, **kwargs):
         super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__(*args, **kwargs)
+        """
+        some of the default parameters are used according to the paper: 
+        Proxy Anchor Loss for Deep Metric Learning https://arxiv.org/abs/2003.13911
+        """
         self.mrg = 0.1
         self.alpha = 32
         self.lr = 1e-4
@@ -64,6 +68,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
         self.nb_workers = 8    # number of cpus process for loading data
         self.batch_size = 16
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.proxy_lr_scale = 100
 
         # run time arguments
         self.model = model           # take input from train_dataset[i][0], generate embedding vector of D
@@ -80,7 +85,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
                                         alpha=self.alpha)
 
         param_groups = [{'params': model.parameters(), 'lr': float(args.lr) * 1},
-                        {'params': criterion.proxies, 'lr': float(args.lr) * 100}]
+                        {'params': criterion.proxies, 'lr': float(args.lr) * self.proxy_lr_scale}]
 
         opt = prepare_optimizer(args, param_groups)
 

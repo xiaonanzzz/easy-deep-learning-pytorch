@@ -1,5 +1,5 @@
 import os
-import sys
+from collections import Counter
 
 class ExpFolderLogger(object):
     def __init__(self):
@@ -29,3 +29,77 @@ class ExpFolderLogger(object):
         print(*args, **kwargs)
         if self.redirect_print and self.log_fobj is not None:
             print(*args, file=self.log_fobj, **kwargs)
+
+
+class MetricLogger(object):
+    def __init__(self, *args, **kwargs):
+        super(MetricLogger, self).__init__(*args, **kwargs)
+
+    def prepare(self):
+        pass
+
+    def update_config(self, config_dict):
+        pass
+
+    def log(self, metric_dict, step=None):
+        pass
+
+    def close(self):
+        pass
+
+class PrintMetricLogger(MetricLogger):
+
+    def __init__(self, *args, **kwargs):
+        super(PrintMetricLogger).__init__(*args, **kwargs)
+        self.config = {}
+        self.log_count = Counter()
+
+    def update_config(self, config_dict):
+        self.config.update(config_dict)
+
+    def log(self, metric_dict, step=None):
+        self.log_count.update(list(metric_dict.keys()))
+        step = step or max(self.log_count.values())
+        print('step: {}, metrics: {}'.format(step, metric_dict))
+
+
+class WandbLogger(MetricLogger):
+    def __init__(self, *args, project='<noname>', tags=[], api_key='', prepare=True, **kwargs):
+        super(WandbLogger, self).__init__(*args, **kwargs)
+        self.project = project
+        self.tags = tags
+        self.api_key = api_key
+        self.run = None
+        self.log_count = Counter()
+
+        if prepare:
+            self.prepare()
+
+    def prepare(self):
+        import wandb
+        os.system('wandb login {}'.format(self.api_key))
+        self.run = wandb.init(project=self.project, tags=self.tags)
+
+    def update_config(self, config_dict):
+        if self.run is None:
+            return
+        self.run.config.update(config_dict)
+
+    def log(self, metric_dict, step=None):
+        """
+
+        :param metric_dict:
+        :param step:            if all metrics are continous, then don't pass step, it will increase automatically
+        :return:
+        """
+        if self.run is None:
+            return
+        self.log_count.update(list(metric_dict.keys()))
+        # if step is given, use it. otherwise, use the max step of metrics
+        self.run.log(metric_dict, step=step or max(self.log_count.values()))
+
+    def close(self):
+        if self.run is None:
+            return
+        self.run.finish()
+

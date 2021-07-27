@@ -4,3 +4,4 @@ torch==1.8.1
 numpy==1.20.2
 fastparquet
 torchvision
+wandb

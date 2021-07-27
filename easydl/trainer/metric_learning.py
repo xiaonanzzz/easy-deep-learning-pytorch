@@ -11,6 +11,7 @@ from easydl.trainer.optimizer import OptimizerArgs, prepare_optimizer
 from easydl.trainer.lr_scheduler import prepare_lr_scheduler, LRSchedulerArgs
 from easydl.trainer import EpochTrainer
 from easydl.config import TqdmConfig
+from easydl.utils.experiments import MetricLogger, PrintMetricLogger
 
 from tqdm import *
 
@@ -51,17 +52,18 @@ class ProxyAnchorLoss(torch.nn.Module):
 
 
 class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedulerArgs, TqdmConfig):
-    def __init__(self, model, train_dataset, sz_embedding, nb_classes, *args, **kwargs):
-        super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__(*args, **kwargs)
+    def __init__(self, model, train_dataset, sz_embedding, nb_classes, *args,
+                 optimizer='adamw', lr=1e-4, weight_decay=1e-4, momentum=0.9,      # default setting for proxy anchor loss
+                 metric_logger=PrintMetricLogger(),
+                 **kwargs):
+        super(ProxyAnchorLossEmbeddingModelTrainer, self).__init__(*args,
+                optimizer=optimizer, lr=lr, weight_decay=weight_decay, momentum=momentum, **kwargs)
         """
         some of the default parameters are used according to the paper: 
         Proxy Anchor Loss for Deep Metric Learning https://arxiv.org/abs/2003.13911
         """
         self.mrg = 0.1
         self.alpha = 32
-        self.lr = 1e-4
-        self.weight_decay = 1e-4
-        self.optimizer = 'adam'
         self.lr_decay_step = 10
         self.lr_decay_gamma = 0.5
         self.nb_epochs = 60
@@ -75,6 +77,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
         self.train_dataset = train_dataset   # train_dataset[i][0] is input data, train_dataset[i][1] is label int
         self.sz_embedding = sz_embedding    # number of dimensions in embedding D
         self.nb_classes = nb_classes      # number of classes in set( train_dataset[i][1] )
+        self.metric_logger = metric_logger       # by default metric logger, do nothing
 
     def train(self):
         args = self
@@ -129,11 +132,10 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
                 losses_per_epoch.append(loss.data.cpu().numpy())
                 opt.step()
 
-                pbar.set_description(
-                    'Train Epoch: {} Loss: {:.6f}'.format(
-                        epoch,
-                        np.mean(losses_per_epoch)), refresh=False)
-            print('training epoch ', epoch, 'mean loss', np.mean(losses_per_epoch))
+                loss_mean = np.mean(losses_per_epoch)
+                pbar.set_description( 'Train Epoch: {} Loss: {:.6f}'.format(epoch, loss_mean), refresh=False)
+
+            self.metric_logger.log({'training_loss': loss_mean})
             pbar.close()
             scheduler.step()
 
@@ -143,7 +145,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(EpochTrainer, OptimizerArgs, LRSchedu
 
 
 class EpochEndEvaluationHook(TqdmConfig):
-    def __init__(self, model, testds, *args, **kwargs):
+    def __init__(self, model, testds, *args, metric_logger=PrintMetricLogger(), **kwargs):
         """
 
         :param model:           pytorch embedder model x -> x'
@@ -153,6 +155,7 @@ class EpochEndEvaluationHook(TqdmConfig):
         self.model = model
         self.testds = testds
         self.recall_at_k_list = []      # each one is a dictionary {'k': value}
+        self.metric_logger = metric_logger    # by default, do nothing.
 
     def __call__(self, *args, **kwargs):
         model = self.model
@@ -161,4 +164,5 @@ class EpochEndEvaluationHook(TqdmConfig):
         eval.evaluate(model)
         model.train()
         self.recall_at_k_list.append(eval.recall_at_k)
-        print('EpochEndEvaluationHook epoch', len(self.recall_at_k_list), 'recall at k', self.recall_at_k_list[-1])
+
+        self.metric_logger.log({'recall@{}'.format(k): v for k,v in self.recall_at_k_list[-1].items() })

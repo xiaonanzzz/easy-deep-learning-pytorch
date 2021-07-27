@@ -27,5 +27,5 @@ class ExpFolderLogger(object):
 
     def print(self, *args, **kwargs):
         print(*args, **kwargs)
-        if self.redirect_print:
+        if self.redirect_print and self.log_fobj is not None:
             print(*args, file=self.log_fobj, **kwargs)

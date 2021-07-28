@@ -38,8 +38,8 @@ class PrinterInterface(object):
         pass
 
 class Printers(PrinterInterface):
-    def __init__(self, printers=[], console=True, filepath=None):
-        self.printers = printers
+    def __init__(self, printers=None, console=True, filepath=None):
+        self.printers = printers or list()
         if console:
             self.printers.append(print)
         if filepath is not None:
@@ -95,9 +95,9 @@ class MetricLogger(object):
 
 
 class MultiMetricLogger(MetricLogger):
-    def __init__(self, *args, loggers=[], **kwargs):
+    def __init__(self, *args, loggers=None, **kwargs):
         super(MetricLogger, self).__init__(*args, **kwargs)
-        self.loggers = loggers
+        self.loggers = loggers or list()
 
     def prepare(self):
         for x in self.loggers:
@@ -134,10 +134,10 @@ class PrintMetricLogger(MetricLogger):
 
 
 class WandbLogger(MetricLogger):
-    def __init__(self, *args, project='<noname>', tags=[], api_key='', prepare=True, **kwargs):
+    def __init__(self, *args, project='<noname>', tags=None, api_key='', prepare=True, **kwargs):
         super(WandbLogger, self).__init__(*args, **kwargs)
         self.project = project
-        self.tags = tags
+        self.tags = tags or list()
         self.api_key = api_key
         self.run = None
         self.log_count = Counter()

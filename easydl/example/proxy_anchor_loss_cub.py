@@ -73,7 +73,7 @@ def resnet50_example():
     trainer.epoch_end_hook = EpochEndEvaluationHook(model, test_data)
     trainer.train()
 
-def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None):
+def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None, data_folder='~/data/CUB_200_2011'):
     """
     reproducing the result from https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
     python train.py --gpu-id 0 \
@@ -93,8 +93,8 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None):
     from easydl.models.cnn_embedder import Resnet50PALVersion
     print('working directory', os.getcwd())
 
-    train_data = Cub2011MetricLearningDS(os.path.expanduser('~/data/CUB_200_2011'), split='train')
-    test_data = Cub2011MetricLearningDS(os.path.expanduser('~/data/CUB_200_2011'), split='test')
+    train_data = Cub2011MetricLearningDS(os.path.expanduser(data_folder), split='train')
+    test_data = Cub2011MetricLearningDS(os.path.expanduser(data_folder), split='test')
 
     print('data shape', train_data[0][0].shape, train_data[0])
     embsize = 512

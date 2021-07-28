@@ -94,6 +94,28 @@ class MetricLogger(object):
         pass
 
 
+class MultiMetricLogger(MetricLogger):
+    def __init__(self, *args, loggers=[], **kwargs):
+        super(MetricLogger, self).__init__(*args, **kwargs)
+        self.loggers = loggers
+
+    def prepare(self):
+        for x in self.loggers:
+            x.prepare()
+
+    def update_config(self, config_dict):
+        for x in self.loggers:
+            x.update_config(config_dict)
+
+    def log(self, metric_dict, step=None):
+        for x in self.loggers:
+            x.log(metric_dict, step=step)
+
+    def close(self):
+        for x in self.loggers:
+            x.close()
+
+
 class PrintMetricLogger(MetricLogger):
 
     def __init__(self, *args, filepath=None, **kwargs):

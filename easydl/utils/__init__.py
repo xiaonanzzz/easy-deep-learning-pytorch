@@ -71,4 +71,5 @@ class TimerContext(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.end = time.time()
-        print('time used by [{}] [{}]'.format(self.timer_name, self.timespan))
+        if self.print_time_use:
+            print('time used by [{}] [{}]'.format(self.timer_name, self.timespan))

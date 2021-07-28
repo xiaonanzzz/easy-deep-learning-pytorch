@@ -31,6 +31,52 @@ class ExpFolderLogger(object):
             print(*args, file=self.log_fobj, **kwargs)
 
 
+class PrinterInterface(object):
+
+    def __call__(self, *args, **kwargs):
+        """ exact same interface with bulti in print() function"""
+        pass
+
+class Printers(PrinterInterface):
+    def __init__(self, printers=[], console=True, filepath=None):
+        self.printers = printers
+        if console:
+            self.printers.append(print)
+        if filepath is not None:
+            self.printers.append(FilePrinter(filepath))
+
+    def __call__(self, *args, **kwargs):
+        for printer in self.printers:
+            printer(*args, **kwargs)
+
+
+class FilePrinter(PrinterInterface):
+    def __init__(self, filepath, prepare=True):
+        self.filepath = os.path.expandvars(os.path.expanduser(filepath))
+        self.file_obj = None
+        if prepare:
+            self.prepare()
+
+    def prepare(self):
+        if self.file_obj is not None:
+            return
+        d = os.path.dirname(self.filepath)
+        os.makedirs(d, exist_ok=True)
+        self.file_obj = open(self.filepath, mode='w+t')
+
+    def __call__(self, *args, flush=True, **kwargs):
+        if self.file_obj is None:
+            import warnings
+            warnings.warn('the file printer is not preapred')
+            return
+        print(*args, file=self.file_obj, flush=flush, **kwargs)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            self.file_obj.close()
+        except:
+            pass
+
 class MetricLogger(object):
     def __init__(self, *args, **kwargs):
         super(MetricLogger, self).__init__(*args, **kwargs)
@@ -47,12 +93,14 @@ class MetricLogger(object):
     def close(self):
         pass
 
+
 class PrintMetricLogger(MetricLogger):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, filepath=None, **kwargs):
         super(PrintMetricLogger).__init__(*args, **kwargs)
         self.config = {}
         self.log_count = Counter()
+        self.print = Printers(filepath=filepath)
 
     def update_config(self, config_dict):
         self.config.update(config_dict)
@@ -60,7 +108,7 @@ class PrintMetricLogger(MetricLogger):
     def log(self, metric_dict, step=None):
         self.log_count.update(list(metric_dict.keys()))
         step = step or max(self.log_count.values())
-        print('step: {}, metrics: {}'.format(step, metric_dict))
+        self.print('step: {}, metrics: {}'.format(step, metric_dict))
 
 
 class WandbLogger(MetricLogger):

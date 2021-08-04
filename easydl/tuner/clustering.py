@@ -1,39 +1,35 @@
 from sklearn.cluster import MeanShift
 import numpy as np
 from easydl.evaluator.clustering import evaluate_clustering_with_labels
+from easydl import TimerContext, prepare_path
+import pandas as pd
+from os.path import join
 
 
-def kpi_purity_class_cluster_score(y, y_cluster):
-    metrics = evaluate_clustering_with_labels(y, y_cluster)
+def tune_mean_shift(x, y,  bandwidth_range=None, save_path='meanshift-tune.csv', disable_tqdm=False):
+    """
+    x, y are testing set
+    """
+    import tqdm
 
-    kpi = metrics['pure_rate'] * metrics['class_to_cluster_raio']
+    rows = []
+    timer = TimerContext(name='Tuning timer')
+    timer.__enter__()
+    if bandwidth_range is None:
+        bandwidth_range = np.arange(0.05, 1, 0.05)
 
-    return kpi
+    for bandwidth in tqdm(bandwidth_range, disable=disable_tqdm):
+        cls = MeanShift(bandwidth=bandwidth)
+        ypred = cls.fit_predict(x)
+        metrics1 = evaluate_clustering_with_labels(y, ypred)
 
+        row = {'bandwidth': bandwidth}
+        row.update(metrics1)
 
-class ClusteringTuner():
-    def __init__(self):
-        self.kpi_function = kpi_purity_class_cluster_score
+        rows.append(row)
 
-    def tune(self, x, y):
-        pass
+    rows = pd.DataFrame(rows)
+    prepare_path(save_path)
+    rows.to_csv(save_path, index=False)
+    timer.__exit__()
 
-
-class MeanShiftTuner(ClusteringTuner):
-    def __init__(self):
-        super(MeanShiftTuner, self).__init__()
-        self.bandwidth_set = np.arange(0, 1, 0.05)
-
-    def tune(self, x, y):
-        best_kpi = -np.inf
-        for bandwidth in self.bandwidth_set:
-            cluster = MeanShift(bandwidth=bandwidth)
-            yc = cluster.fit_predict(x, y)
-
-            kpi = self.kpi_function(y, yc)
-
-            if kpi > best_kpi:
-                best_kpi = kpi
-                best_setting = {'algorithm': 'meanshift',
-                                'bandwidth': bandwidth}
-        return best_kpi, best_setting

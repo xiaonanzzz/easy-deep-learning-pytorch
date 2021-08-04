@@ -4,7 +4,11 @@ import numpy as np
 from .experiments import *
 import time
 import datetime
+import os
 
+def prepare_path(path):
+    dirpath = os.path.dirname(path)
+    os.makedirs(dirpath, exist_ok=True)
 
 def set_random_seed(seed):
     random.seed(seed)

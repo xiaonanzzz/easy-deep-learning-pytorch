@@ -3,6 +3,14 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from collections import Counter
 
+KEY_CLUSTERS = 'clusters'
+KEY_CLASSES = 'classes'
+KEY_AMI_SCORE = 'adjusted_mutual_info_score'
+KEY_FM_SCORE = 'fowlkes_mallows_score'
+KEY_PRECISION = 'precision'
+KEY_PURERATE = 'pure_rate'
+KEY_CLASS_TO_CLUSTER_RATIO = 'class_to_cluster_raio'
+KEY_PURE_RATE_TIMES_CCRATIO = 'pure_times_class_cluster_ratio'
 
 def evaluate_clustering_with_labels(ytrue, ycluster):
     true_label_encoder = LabelEncoder()

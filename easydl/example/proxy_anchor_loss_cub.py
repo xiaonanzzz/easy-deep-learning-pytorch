@@ -1,9 +1,10 @@
 import torch
 from easydl.datasets.cub import Cub2011MetricLearningDS
-from easydl.trainer.metric_learning import ProxyAnchorLossEmbeddingModelTrainer, EpochEndEvaluationHook
+from easydl.trainer.metric_learning import *
 from torch import nn
 from easydl.models import L2Normalization
 from easydl.utils.experiments import WandbLogger, MetricLogger
+from easydl.config import *
 
 class SimpleNet(nn.Module):
 
@@ -91,6 +92,7 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None, data_fo
     """
     import os
     from easydl.models.cnn_embedder import Resnet50PALVersion
+
     print('working directory', os.getcwd())
 
     train_data = Cub2011MetricLearningDS(os.path.expanduser(data_folder), split='train')
@@ -100,8 +102,11 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None, data_fo
     embsize = 512
     model = Resnet50PALVersion(embsize, pretrained=False, bn_freeze=False)
     metric_logger = WandbLogger(project='cub-reproduce', tags=['resnet50', 'proxy-anchor-loss', ], api_key=wandb_api, prepare=True) if wandb_api else MetricLogger()
-    trainer = ProxyAnchorLossEmbeddingModelTrainer(model, train_data, embsize, 100, tqdm_disable=False, metric_logger=metric_logger)
-    trainer.epoch_end_hook = EpochEndEvaluationHook(model, test_data, metric_logger=metric_logger)
+
+    cm = ProxyAnchorLossConfigContainer()
+    cm.runtime.tqdm_disable = False
+    trainer = ProxyAnchorLossEmbeddingModelTrainer(model, train_data, embsize, 100, metric_logger=metric_logger, configure_manager=cm)
+    trainer.epoch_end_hook = EpochEndEvaluationHook(model, test_data, metric_logger=metric_logger, configure_manager=cm)
 
     trainer.train()
 

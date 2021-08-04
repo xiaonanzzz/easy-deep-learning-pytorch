@@ -1,8 +1,8 @@
 import torch
 from easydl.utils import process_dataset_by_batch
-from easydl.config import DeviceConfig
+from easydl.config import RuntimeConfig
 
-class ClassificationModelEvaluator(DeviceConfig):
+class ClassificationModelEvaluator(RuntimeConfig):
     def __init__(self, test_dataset):
         super(ClassificationModelEvaluator, self).__init__()
         self.test_dataset = test_dataset

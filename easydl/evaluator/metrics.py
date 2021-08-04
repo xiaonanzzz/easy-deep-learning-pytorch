@@ -1,4 +1,4 @@
-from easydl.config import DeviceConfig
+from easydl.config import RuntimeConfig
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -9,7 +9,7 @@ class RetrivalMetricsBase(object):
     def recall_k(self, k):
         pass
 
-class RetrivalMetrics(DeviceConfig):
+class RetrivalMetrics(RuntimeConfig):
     def __init__(self, qx, qy, ix, iy, metric='cosine', ignore_k=0):
         super(RetrivalMetrics, self).__init__()
         assert qx.shape[1] == ix.shape[1]
@@ -37,7 +37,7 @@ class RetrivalMetrics(DeviceConfig):
 
         return float(match) / float(total)
 
-class RetrivalMetricsSklearn(DeviceConfig):
+class RetrivalMetricsSklearn(RuntimeConfig):
     key_match_mat = 'match_mat'
     key_dist = 'dist'
 

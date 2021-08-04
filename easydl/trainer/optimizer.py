@@ -1,16 +1,9 @@
 import torch
 
-class OptimizerArgs(object):
-    def __init__(self, *args, optimizer='sgd', lr=0.1, weight_decay=1e-4, momentum=0.9, **kwargs):
-        super(OptimizerArgs, self).__init__(*args, **kwargs)
-        self.optimizer = optimizer
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.momentum = momentum
+from easydl.config import OptimizerConfig
 
 
-
-def prepare_optimizer(args:OptimizerArgs, param_groups):
+def prepare_optimizer(args: OptimizerConfig, param_groups):
     if args.optimizer == 'sgd':
         opt = torch.optim.SGD(param_groups, lr=float(args.lr), weight_decay=args.weight_decay, momentum=args.momentum, nesterov=True)
     elif args.optimizer == 'adam':

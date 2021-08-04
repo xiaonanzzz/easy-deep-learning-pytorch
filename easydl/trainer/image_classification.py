@@ -1,13 +1,13 @@
 import torch
-from .optimizer import prepare_optimizer, OptimizerArgs
-from .lr_scheduler import prepare_lr_scheduler, LRSchedulerArgs
+from .optimizer import prepare_optimizer
+from .lr_scheduler import prepare_lr_scheduler
 from tqdm import tqdm
 import numpy as np
-from easydl.config import DeviceConfig
+from easydl.config import RuntimeConfig, OptimizerConfig, LRSchedulerConfig
 from . import EpochTrainer
 
 
-class ImageClassificationTrainer(EpochTrainer, DeviceConfig, OptimizerArgs, LRSchedulerArgs):
+class ImageClassificationTrainer(EpochTrainer, RuntimeConfig, OptimizerConfig, LRSchedulerConfig):
     def __init__(self):
         super(ImageClassificationTrainer, self).__init__()
         self.batch_size = 32

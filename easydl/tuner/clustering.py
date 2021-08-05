@@ -13,8 +13,6 @@ def tune_mean_shift(x, y,  bandwidth_range=None, save_path='meanshift-tune.csv',
     from tqdm import tqdm
 
     rows = []
-    timer = TimerContext(name='Tuning timer')
-    timer.__enter__()
     if bandwidth_range is None:
         bandwidth_range = np.arange(0.05, 1, 0.05)
 
@@ -31,5 +29,4 @@ def tune_mean_shift(x, y,  bandwidth_range=None, save_path='meanshift-tune.csv',
     rows = pd.DataFrame(rows)
     prepare_path(save_path)
     rows.to_csv(save_path, index=False)
-    timer.__exit__()
 

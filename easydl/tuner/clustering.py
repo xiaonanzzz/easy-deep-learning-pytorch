@@ -10,7 +10,7 @@ def tune_mean_shift(x, y,  bandwidth_range=None, save_path='meanshift-tune.csv',
     """
     x, y are testing set
     """
-    import tqdm
+    from tqdm import tqdm
 
     rows = []
     timer = TimerContext(name='Tuning timer')

@@ -62,7 +62,7 @@ class FilePrinter(PrinterInterface):
             return
         d = os.path.dirname(self.filepath)
         os.makedirs(d, exist_ok=True)
-        self.file_obj = open(self.filepath, mode='w+t')
+        self.file_obj = open(self.filepath, mode='a+t')
 
     def __call__(self, *args, flush=True, **kwargs):
         if self.file_obj is None:

@@ -51,9 +51,10 @@ class Printers(PrinterInterface):
 
 
 class FilePrinter(PrinterInterface):
-    def __init__(self, filepath, prepare=True):
+    def __init__(self, filepath, prepare=True, mode='a+t'):
         self.filepath = os.path.expandvars(os.path.expanduser(filepath))
         self.file_obj = None
+        self.mode = mode
         if prepare:
             self.prepare()
 
@@ -62,7 +63,7 @@ class FilePrinter(PrinterInterface):
             return
         d = os.path.dirname(self.filepath)
         os.makedirs(d, exist_ok=True)
-        self.file_obj = open(self.filepath, mode='a+t')
+        self.file_obj = open(self.filepath, mode=self.mode)
 
     def __call__(self, *args, flush=True, **kwargs):
         if self.file_obj is None:

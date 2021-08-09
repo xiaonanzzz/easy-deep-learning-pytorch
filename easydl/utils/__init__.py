@@ -10,6 +10,10 @@ def prepare_path(path):
     dirpath = os.path.dirname(path)
     os.makedirs(dirpath, exist_ok=True)
 
+def save_model(model, path):
+    prepare_path(path)
+    torch.save(model.state_dict(), path)
+
 def set_random_seed(seed):
     random.seed(seed)
     np.random.seed(seed)

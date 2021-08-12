@@ -19,11 +19,23 @@ def check_timer():
     from easydl.utils import TimerContext
     import time
     with TimerContext(name='timer 1'):
-        time.sleep(10)
+        time.sleep(0.1)
+
+def check_batch_process():
+    from easydl.utils import batch_process_tensor
+    from easydl.models.mlp import MLPEmbedder
+    import numpy as np
+    model = MLPEmbedder([128, 64], output_normalize='l2')
+    x = np.zeros((3, 128))
+    y = batch_process_tensor(x, model)
+    print(y.shape)
+    assert y.shape == (3, 64)
+    print('check passed', 'from easydl.utils import batch_process_tensor')
 
 def fast_checks():
     check_timer()
     check_RetrivalMetricsFaiss()
+    check_batch_process()
 
 if __name__ == '__main__':
     fast_checks()

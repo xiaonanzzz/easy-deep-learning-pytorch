@@ -1,5 +1,7 @@
 import torch
 from tqdm import tqdm
+from torch.utils.data import TensorDataset
+import numpy as np
 
 def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_index=1,
                              device=torch.device('cpu'), out_device=torch.device('cpu'), tqdm_disable=True):
@@ -35,7 +37,7 @@ def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_
             elif isinstance(save_index, list):
                 save.append([data_batch[idx] for idx in save_index])
 
-    if isinstance(input_index, int) or isinstance(input_index, list):
+    if isinstance(save_index, int) or isinstance(save_index, list):
         return out, save
     return out
 
@@ -51,3 +53,18 @@ def concat_tensors_in_list_of_tuple_given_index(tensor_list_tuple, index_in_tupl
         list_of_tensor.append(one[index_in_tuple])
 
     return torch.cat(list_of_tensor, dim=concat_dim)
+
+
+def batch_process_tensor(x, model, **kwargs):
+    """ parameters see process_dataset_by_batch """
+    is_numpy = isinstance(x, np.ndarray)
+    if is_numpy:
+        x = torch.FloatTensor(x)
+
+    ds = TensorDataset(x)
+    x = process_dataset_by_batch(ds, model, save_index=None, **kwargs)
+    x = torch.cat(x, dim=0)
+    if is_numpy:
+        return x.numpy()
+    return x
+

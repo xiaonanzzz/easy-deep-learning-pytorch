@@ -4,7 +4,9 @@ from torch.utils.data import TensorDataset
 import numpy as np
 
 def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_index=1,
-                             device=torch.device('cpu'), out_device=torch.device('cpu'), tqdm_disable=True):
+                             device=torch.device('cpu'), out_device=torch.device('cpu'),
+                             tqdm_disable=True,
+                             tqdm_description=''):
     """
 
     :param dataset:         a pytorch dataset class, e.g. ds[index] -> x0, x1, x2, ...
@@ -25,7 +27,7 @@ def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_
     )
     out = []
     save = []
-    for data_batch in tqdm(dl, disable=tqdm_disable):
+    for data_batch in tqdm(dl, disable=tqdm_disable, desc=tqdm_description):
         with torch.autograd.no_grad():
             x = data_batch[input_index]
             x = x.to(device)

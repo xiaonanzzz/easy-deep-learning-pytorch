@@ -9,3 +9,8 @@ class EpochTrainer(object):
 
     def train(self):
         pass
+
+    def on_epoch_end(self):
+        if self.epoch_end_hook is not None:
+            self.epoch_end_hook()
+

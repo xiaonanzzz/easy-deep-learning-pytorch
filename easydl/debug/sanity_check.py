@@ -1,7 +1,7 @@
 
 def check_RetrivalMetricsFaiss():
     import torch
-    from easydl.evaluator.metrics import RetrivalMetricsSklearn
+    from easydl.trainer.metrics import RetrivalMetricsSklearn
     qx = torch.FloatTensor([[0, 1, ], [1, 1], [1, 0]])
     qy = torch.LongTensor([0, 1, 2])
 

@@ -1,5 +1,14 @@
 import torch
 
+"""
+This module provides helps in defining, using and managing configurations. It serves the following purpose:
+1) configurations can be stored in python object, so that coding tools can auto-complete and coders don't need to memorize them
+2) every algorithm has different default or suggested configurations, therefore, each algorithm can define their default setting
+3) for users/coders, they only need to modify a little bit accordingly
+
+ConfigBase are base class to define some common configurations.
+
+"""
 class ConfigBase(object):
     BASIC_CLASSES = set([int, str, float])
 
@@ -75,7 +84,7 @@ class ConfigConsumer(object):
 
 
 class RuntimeConfig(ConfigBase):
-    def __init__(self, *args, device=None, cpu_workers=2, tqdm_disable=True, infer_batch_size=32, **kwargs):
+    def __init__(self, *args, device=None, cpu_workers=2, tqdm_disable=False, infer_batch_size=32, **kwargs):
         super(RuntimeConfig, self).__init__(*args, **kwargs)
         self.device = device
         if self.device is None:
@@ -85,13 +94,23 @@ class RuntimeConfig(ConfigBase):
         self.infer_batch_size = infer_batch_size
 
 
-class OptimizerConfig(ConfigBase):
-    def __init__(self, *args, optimizer='sgd', lr=0.1, weight_decay=1e-4, momentum=0.9, **kwargs):
-        super(OptimizerConfig, self).__init__(*args, **kwargs)
+class TrainingConfig(ConfigBase):
+    def __init__(self, *args, optimizer='sgd', lr=0.1, weight_decay=1e-4, momentum=0.9,
+                 lr_scheduler_type='step', lr_decay_step=10, lr_decay_gamma=0.5,
+                 train_batch_size=30, train_epoch=30,  **kwargs):
+        super(TrainingConfig, self).__init__(*args, **kwargs)
         self.optimizer = optimizer
         self.lr = lr
         self.weight_decay = weight_decay
         self.momentum = momentum
+
+        self.lr_scheduler_type = lr_scheduler_type
+        self.lr_decay_step = lr_decay_step
+        self.lr_decay_gamma = lr_decay_gamma
+
+        # data related configurations
+        self.train_batch_size = train_batch_size
+        self.train_epoch = train_epoch
 
 
 class LRSchedulerConfig(ConfigBase):
@@ -110,6 +129,9 @@ class SklearnConfig(ConfigBase):
 class CommonDeepLearningConfigContainer(ConfigContainer):
     def __init__(self, *args, **kwargs):
         super(CommonDeepLearningConfigContainer, self).__init__(*args, **kwargs)
-        self.optimizer = OptimizerConfig()
+        self.optimizer = TrainingConfig()
         self.lr_scheduler = LRSchedulerConfig()
         self.runtime = RuntimeConfig()
+
+
+

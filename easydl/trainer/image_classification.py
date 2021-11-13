@@ -1,74 +1,83 @@
-import torch
-from .optimizer import prepare_optimizer
-from .lr_scheduler import prepare_lr_scheduler
-from tqdm import tqdm
 import numpy as np
-from easydl.config import RuntimeConfig, OptimizerConfig, LRSchedulerConfig
-from . import EpochTrainer
+import torch
+from tqdm import tqdm
+
+from easydl.config import RuntimeConfig
+from easydl.config import TrainingConfig
+from easydl.utils import batch_process_x_y_dataset_and_concat
+from easydl.utils.experiments import MetricLogger, PrintMetricLogger
+from .lr_scheduler import prepare_lr_scheduler
+from .optimizer import prepare_optimizer
 
 
-class ImageClassificationTrainer(EpochTrainer, RuntimeConfig, OptimizerConfig, LRSchedulerConfig):
-    def __init__(self):
-        super(ImageClassificationTrainer, self).__init__()
-        self.batch_size = 32
-        self.nb_epochs = 30
-        self.nb_workers = 8 if torch.cuda.is_available() else 0
+def evaluate_classification_model(model, test_dataset, runcfg:RuntimeConfig, **kwargs):
+    ypred, ytrue = batch_process_x_y_dataset_and_concat(test_dataset, model, batch_size=runcfg.infer_batch_size,
+                                       save_index=1, device=runcfg.device,
+                                                   tqdm_disable=False, tqdm_description='evaluation', **kwargs)
+    assert ypred.shape[0] == ytrue.shape[0]
+    if len(ypred.shape) == 2:
+        ypred = torch.argmax(ypred, dim=1)
+    assert ypred.shape == ytrue.shape
+    accuracy = float(torch.mean((ypred == ytrue).double()))
+    met_dict = {'accuracy': accuracy}
+    return met_dict
 
-    def train(self, model, train_dataset, epoch_end_hook=None):
-        args = self
 
-        criterion = torch.nn.CrossEntropyLoss()
+def train_image_classification_model_2021_nov(model, train_ds, train_cfg: TrainingConfig, run_cfg: RuntimeConfig,
+                                              metric_logger: MetricLogger,
+                                              test_ds=None, epoch_end_hook=None, eval_train_ds=True):
+    """
+    epoch_end_hook will be called at the end of epoch, epoch_end_hook(locals=locals())
+    """
+    criterion = torch.nn.CrossEntropyLoss()
+    param_groups = [{'params': model.parameters(), 'lr': float(train_cfg.lr) * 1}]
 
-        param_groups = [{'params': model.parameters(), 'lr': float(args.lr) * 1}]
+    opt = prepare_optimizer(train_cfg, param_groups)
+    scheduler = prepare_lr_scheduler(train_cfg, opt)
+    dl_tr = torch.utils.data.DataLoader(
+        train_ds,
+        batch_size=train_cfg.train_batch_size,
+        num_workers=run_cfg.cpu_workers,
+        pin_memory=True
+    )
 
-        opt = prepare_optimizer(self, param_groups)
+    for epoch in range(1, train_cfg.train_epoch + 1):
+        losses_per_epoch = []
 
-        scheduler = prepare_lr_scheduler(self, opt)
+        model.train()
+        model.to(run_cfg.device)
+        criterion.to(run_cfg.device)
+        pbar = tqdm(enumerate(dl_tr), disable=run_cfg.tqdm_disable, total=len(dl_tr))
+        for batch_idx, (x, y) in pbar:
+            assert torch.isnan(x).sum() == 0
 
-        print("Training parameters: {}".format(vars(args)))
+            m = model(x.to(run_cfg.device))
+            loss = criterion(m, y.to(run_cfg.device))
+            opt.zero_grad()
+            loss.backward()
 
-        dl_tr = torch.utils.data.DataLoader(
-            train_dataset,
-            batch_size=self.batch_size,
-            num_workers=args.nb_workers,
-            pin_memory=True
-        )
+            assert torch.isnan(loss).sum() == 0
+            torch.nn.utils.clip_grad_value_(model.parameters(), 10)
+            opt.step()
 
-        for epoch in range(1, args.nb_epochs + 1):
-            losses_per_epoch = []
+            # plot info [optional]
+            losses_per_epoch.append(loss.data.cpu().numpy())
+            pbar.set_postfix({'epoch': epoch,
+                              'batch': batch_idx,
+                              'numbatch': len(dl_tr),
+                              'loss_mean': np.mean(losses_per_epoch)}
+                             , refresh=True)
+        pbar.close()
+        scheduler.step()
 
-            model.train()
-            model.to(self.device)
-            criterion.to(self.device)
-            pbar = tqdm(enumerate(dl_tr))
-            for batch_idx, (x, y) in pbar:
-                assert torch.isnan(x).sum() == 0
-
-                m = model(x.to(self.device))
-                loss = criterion(m, y.to(self.device))
-
-                opt.zero_grad()
-                loss.backward()
-
-                if torch.isnan(loss).sum() > 0:
-                    print('model input\n', x)
-                    print('embedding output\n', m)
-                    print('label', y)
-                    raise RuntimeError()
-
-                torch.nn.utils.clip_grad_value_(model.parameters(), 10)
-
-                losses_per_epoch.append(loss.data.cpu().numpy())
-                opt.step()
-
-                pbar.set_description(
-                    'Train Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
-                        epoch, batch_idx + 1, len(dl_tr),
-                               100. * batch_idx / len(dl_tr),
-                        np.mean(losses_per_epoch)))
-            pbar.close()
-            scheduler.step()
-
-            if epoch_end_hook is not None:
-                print('epoch done. calling hook function')
-                epoch_end_hook(locals=locals())
+        # epoch end
+        model.eval()
+        if eval_train_ds:
+            met = evaluate_classification_model(model, train_ds, run_cfg)
+            metric_logger.log({'train_accuracy': met['accuracy']})
+        if test_ds is not None:
+            met = evaluate_classification_model(model, test_ds, run_cfg)
+            metric_logger.log({'test_accuracy': met['accuracy']})
+        if epoch_end_hook is not None:
+            print('epoch done. calling hook function...')
+            epoch_end_hook(locals=locals())

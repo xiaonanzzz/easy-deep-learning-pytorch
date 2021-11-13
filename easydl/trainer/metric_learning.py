@@ -5,7 +5,9 @@ import random
 import numpy as np
 from torch.utils.data.sampler import BatchSampler
 
-from easydl.evaluator import MetricLearningModelEvaluatorSingleSet
+from easydl import batch_process_x_y_dataset_and_concat
+from easydl.trainer.metrics import RetrivalMetricsSklearn
+
 from easydl.utils import l2_norm, binarize
 from easydl.trainer.optimizer import prepare_optimizer
 from easydl.trainer.lr_scheduler import prepare_lr_scheduler
@@ -64,7 +66,7 @@ class ProxyAnchorLoss(torch.nn.Module):
 class ProxyAnchorLossConfigContainer(ConfigContainer):
     def __init__(self, *args, **kwargs):
         super(ProxyAnchorLossConfigContainer, self).__init__(*args, **kwargs)
-        self.optimizer = OptimizerConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, momentum=0.9)
+        self.optimizer = TrainingConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, momentum=0.9)
         self.lr_scheduler = LRSchedulerConfig(lr_decay_step=10, lr_decay_gamma=0.5)
         self.loss_config = ProxyAnchorLossConfig(margin=0.1, alpha=32)
         self.runtime = RuntimeConfig()
@@ -88,11 +90,11 @@ class ProxyAnchorLossEmbeddingModelTrainer(ConfigConsumer, EpochTrainer):
         self.nb_classes = nb_classes      # number of classes in set( train_dataset[i][1] )
         self.metric_logger = metric_logger       # by default metric logger, do nothing
 
-        self.check_config([OptimizerConfig, LRSchedulerConfig, ProxyAnchorLossConfig, RuntimeConfig])
+        self.check_config([TrainingConfig, LRSchedulerConfig, ProxyAnchorLossConfig, RuntimeConfig])
 
     def train(self):
         losscfg: ProxyAnchorLossConfig = self.get_config(ProxyAnchorLossConfig)
-        optcfg: OptimizerConfig = self.get_config(OptimizerConfig)
+        optcfg: TrainingConfig = self.get_config(TrainingConfig)
         runcfg: RuntimeConfig = self.get_config(RuntimeConfig)
 
         model = self.model
@@ -179,3 +181,26 @@ class EpochEndEvaluationHook(ConfigConsumer):
         self.recall_at_k_list.append(eval.recall_at_k)
 
         self.metric_logger.log({'recall@{}'.format(k): v for k,v in self.recall_at_k_list[-1].items() })
+
+
+class MetricLearningModelEvaluatorSingleSet(ConfigConsumer):
+    def __init__(self, test_dataset, k_values=None, metric_pyclass=RetrivalMetricsSklearn, **kwargs):
+        super(MetricLearningModelEvaluatorSingleSet, self).__init__(**kwargs)
+        self.test_dataset = test_dataset
+        self.metric_pyclass = metric_pyclass
+        k_values = k_values or [1]
+        self.recall_at_k = {k: 0 for k in k_values}
+
+        self.check_config([RuntimeConfig])
+
+    def evaluate(self, model):
+        runcfg: RuntimeConfig = self.configure_container[RuntimeConfig]
+        x, y = batch_process_x_y_dataset_and_concat(self.test_dataset, model,
+                                                    batch_size=runcfg.infer_batch_size,
+                                                    save_index=1,
+                                                    device=runcfg.device)
+
+        metrics = self.metric_pyclass(x, y, x, y, ignore_k=1)
+
+        for k in self.recall_at_k:
+            self.recall_at_k[k] = metrics.recall_k(k)

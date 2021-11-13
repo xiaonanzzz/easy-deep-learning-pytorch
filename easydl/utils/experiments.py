@@ -96,9 +96,11 @@ class MetricLogger(object):
 
 
 class MultiMetricLogger(MetricLogger):
-    def __init__(self, *args, loggers=None, **kwargs):
+    def __init__(self, loggers, *args, **kwargs):
         super(MetricLogger, self).__init__(*args, **kwargs)
-        self.loggers = loggers or list()
+        self.loggers = list(loggers)
+
+        print('multiple loggers', *loggers)
 
     def prepare(self):
         for x in self.loggers:
@@ -127,6 +129,7 @@ class PrintMetricLogger(MetricLogger):
 
     def update_config(self, config_dict):
         self.config.update(config_dict)
+        print(self.config)
 
     def log(self, metric_dict, step=None):
         self.log_count.update(list(metric_dict.keys()))
@@ -174,3 +177,10 @@ class WandbLogger(MetricLogger):
             return
         self.run.finish()
 
+
+def prepare_logger(wandb_key=None, filepath=None, project_name=None, tags=None, ):
+    loggers = [PrintMetricLogger(filepath=filepath)]
+    if wandb_key:
+        assert project_name is not None
+        loggers.append(WandbLogger(project=project_name, api_key=wandb_key, tags=tags))
+    return MultiMetricLogger(loggers)

@@ -39,6 +39,13 @@ def l2_norm(input):
     output = _output.view(input_size)
     return output
 
+def get_config_from_cmd(key, default=None, key_type=None):
+    import argparse
+    pa = argparse.ArgumentParser()
+    pa.add_argument('--{}'.format(key), type=type(default) if key_type is None else key_type, default=default)
+    args = pa.parse_known_args()[0]
+    return args.__dict__[key]
+
 class StringTextfileSaver():
     def __init__(self, filepath):
         self.filepath = filepath

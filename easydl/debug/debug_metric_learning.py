@@ -1,7 +1,7 @@
 from easydl.models.linear import LinearEmbedder
 import torch
 from easydl.trainer.metric_learning import ProxyAnchorLossEmbeddingModelTrainer, EpochEndEvaluationHook, ProxyAnchorLossConfigContainer
-from easydl.config import ConfigContainer, RuntimeConfig
+
 
 def debug_proxy_anchor_loss_algo():
     model = LinearEmbedder(300, 200)
@@ -20,7 +20,7 @@ def debug_proxy_anchor_loss_algo():
 
 def debug_retrieval_accuracy():
 
-    from easydl.evaluator.metrics import RetrivalMetrics
+    from easydl.trainer.metrics import RetrivalMetrics
     qx = torch.FloatTensor([[0, 1,], [1, 1], [1, 0]])
     qy = torch.LongTensor([0, 1, 2])
 

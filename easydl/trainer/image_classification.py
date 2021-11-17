@@ -71,6 +71,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
         scheduler.step()
 
         # epoch end
+        metric_logger.log({'lr': scheduler.get_last_lr(), 'train_loss_mean': np.mean(losses_per_epoch)})
         model.eval()
         if eval_train_ds:
             met = evaluate_classification_model(model, train_ds, run_cfg)

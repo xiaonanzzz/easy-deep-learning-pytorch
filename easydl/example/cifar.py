@@ -1,13 +1,15 @@
-import pandas as pd
 import torch
-import numpy as np
+import torch
+from torch import nn
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor, Normalize, Compose
-from torch import nn
-from easydl.trainer.image_classification import train_image_classification_model_2021_nov
+
+import easydl
 from easydl.config import TrainingConfig, RuntimeConfig
+from easydl.trainer.image_classification import train_image_classification_model_2021_nov
 from easydl.utils import get_config_from_cmd
 from easydl.utils.experiments import prepare_logger
+
 
 class SimpleNet(nn.Module):
 
@@ -39,7 +41,8 @@ def get_cifar_image_transformer():
 
 
 def train_simple_net():
-    project_name = get_config_from_cmd('project_name', 'resnet_18_cifar_10')
+    # get configurations from cmd
+    project_name = get_config_from_cmd('project_name', 'simple_net_cifar_10')
     wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
 
     train_ds = CIFAR10('~/pytorch_data', train=True, download=True, transform=get_cifar_image_transformer())
@@ -48,14 +51,14 @@ def train_simple_net():
     print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
     model = SimpleNet(10)
 
-    train_cfg = TrainingConfig()
+    train_cfg = TrainingConfig(optimizer='sgd', lr=0.01)
     run_cfg = RuntimeConfig()
     metric_logger = prepare_logger(wandb_key=wandb_key,
                                    project_name=project_name,
                                    tags=['cifar10', 'train_simple_net'],    # modify this accordingly !!!
                                    )
     metric_logger.update_config(train_cfg.__dict__)
-
+    print('training code version', easydl.__version__)
     train_image_classification_model_2021_nov(model, train_ds, train_cfg, run_cfg, metric_logger, test_ds=test_ds)
 
 

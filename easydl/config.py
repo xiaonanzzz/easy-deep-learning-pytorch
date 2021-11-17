@@ -33,6 +33,10 @@ class ConfigBase(object):
     def all_config(self):
         return self.__dict__.copy()
 
+    def assign_values_from_kwargs(self, kwargs):
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
+
 
 class ConfigContainer(object):
     def __init__(self, *args, configures=None, **kwargs):
@@ -125,13 +129,6 @@ class SklearnConfig(ConfigBase):
         super(SklearnConfig, self).__init__(*args, **kwargs)
         self.num_jobs = num_jobs
 
-
-class CommonDeepLearningConfigContainer(ConfigContainer):
-    def __init__(self, *args, **kwargs):
-        super(CommonDeepLearningConfigContainer, self).__init__(*args, **kwargs)
-        self.optimizer = TrainingConfig()
-        self.lr_scheduler = LRSchedulerConfig()
-        self.runtime = RuntimeConfig()
 
 
 

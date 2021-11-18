@@ -1,3 +1,5 @@
+import torch
+
 from .batch_processing import *
 import random
 import numpy as np
@@ -6,6 +8,14 @@ import time
 import datetime
 import os
 
+
+def to_numpy(x):
+    if isinstance(x, torch.Tensor):
+        return x.data.cpu().numpy()
+    elif isinstance(x, np.ndarray):
+        return x
+    else:
+        return np.array(x)
 
 def prepare_path(path):
     dirpath = os.path.dirname(path)

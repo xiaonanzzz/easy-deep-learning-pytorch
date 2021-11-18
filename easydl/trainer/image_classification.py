@@ -8,7 +8,7 @@ from easydl.utils import batch_process_x_y_dataset_and_concat, save_model
 from easydl.utils.experiments import MetricLogger, PrintMetricLogger
 from .lr_scheduler import prepare_lr_scheduler
 from .optimizer import prepare_optimizer
-
+from .common import TrainAccuracyAverage
 
 def evaluate_classification_model(model, test_dataset, runcfg:RuntimeConfig, **kwargs):
     ypred, ytrue = batch_process_x_y_dataset_and_concat(test_dataset, model, batch_size=runcfg.infer_batch_size,
@@ -25,7 +25,7 @@ def evaluate_classification_model(model, test_dataset, runcfg:RuntimeConfig, **k
 
 def train_image_classification_model_2021_nov(model, train_ds, train_cfg: TrainingConfig, run_cfg: RuntimeConfig,
                                               metric_logger: MetricLogger,
-                                              test_ds=None, epoch_end_hook=None, eval_train_ds=True):
+                                              test_ds=None, epoch_end_hook=None, eval_train_ds=False):
     """
     epoch_end_hook will be called at the end of epoch, epoch_end_hook(locals=locals())
     """
@@ -43,6 +43,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
 
     for epoch in range(1, train_cfg.train_epoch + 1):
         losses_per_epoch = []
+        acc_avg = TrainAccuracyAverage()
 
         model.train()
         model.to(run_cfg.device)
@@ -61,17 +62,22 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
             opt.step()
 
             # plot info [optional]
+            acc_avg.update(m, y)
             losses_per_epoch.append(loss.data.cpu().numpy())
             pbar.set_postfix({'epoch': epoch,
                               'batch': batch_idx,
                               'numbatch': len(dl_tr),
-                              'loss_mean': np.mean(losses_per_epoch)}
+                              'loss_mean': np.mean(losses_per_epoch),
+                              'acc_mean': acc_avg.accuracy()}
                              , refresh=True)
         pbar.close()
         scheduler.step()
 
         # epoch end
-        metric_logger.log({'lr': float(scheduler.get_last_lr()[0]), 'train_loss_mean': np.mean(losses_per_epoch)})
+        metric_logger.log({'lr': float(scheduler.get_last_lr()[0]),
+                           'train_loss_mean': np.mean(losses_per_epoch),
+                           'train_acc_mean': acc_avg.accuracy()
+                           })
         model.eval()
         if eval_train_ds:
             met = evaluate_classification_model(model, train_ds, run_cfg)

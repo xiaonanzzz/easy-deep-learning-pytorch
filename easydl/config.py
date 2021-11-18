@@ -37,6 +37,10 @@ class ConfigBase(object):
         for k, v in kwargs.items():
             self.__dict__[k] = v
 
+    def update_values_from_cmd(self, prefix=''):
+        from .utils import update_configs_from_cmd
+        update_configs_from_cmd(self.__dict__, prefix=prefix)
+
 
 class ConfigContainer(object):
     def __init__(self, *args, configures=None, **kwargs):
@@ -88,7 +92,7 @@ class ConfigConsumer(object):
 
 
 class RuntimeConfig(ConfigBase):
-    def __init__(self, *args, device=None, cpu_workers=2, tqdm_disable=False, infer_batch_size=32, **kwargs):
+    def __init__(self, *args, device=None, cpu_workers=2, tqdm_disable=False, infer_batch_size=32, model_dir=None, **kwargs):
         super(RuntimeConfig, self).__init__(*args, **kwargs)
         self.device = device
         if self.device is None:
@@ -96,6 +100,7 @@ class RuntimeConfig(ConfigBase):
         self.cpu_workers = cpu_workers
         self.tqdm_disable = tqdm_disable
         self.infer_batch_size = infer_batch_size
+        self.model_dir = model_dir
 
 
 class TrainingConfig(ConfigBase):
@@ -118,6 +123,7 @@ class TrainingConfig(ConfigBase):
 
 
 class LRSchedulerConfig(ConfigBase):
+    """ TODO: clean up this code """
     def __init__(self, *args, lr_decay_step=10, lr_decay_gamma=0.5, **kwargs):
         super(LRSchedulerConfig, self).__init__(*args, **kwargs)
         self.lr_decay_step = lr_decay_step
@@ -128,7 +134,4 @@ class SklearnConfig(ConfigBase):
     def __init__(self, *args, num_jobs=2, **kwargs):
         super(SklearnConfig, self).__init__(*args, **kwargs)
         self.num_jobs = num_jobs
-
-
-
 

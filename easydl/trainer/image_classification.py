@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from easydl.config import RuntimeConfig
 from easydl.config import TrainingConfig
-from easydl.utils import batch_process_x_y_dataset_and_concat
+from easydl.utils import batch_process_x_y_dataset_and_concat, save_model
 from easydl.utils.experiments import MetricLogger, PrintMetricLogger
 from .lr_scheduler import prepare_lr_scheduler
 from .optimizer import prepare_optimizer
@@ -71,7 +71,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
         scheduler.step()
 
         # epoch end
-        metric_logger.log({'lr': scheduler.get_last_lr(), 'train_loss_mean': np.mean(losses_per_epoch)})
+        metric_logger.log({'lr': float(scheduler.get_last_lr()[0]), 'train_loss_mean': np.mean(losses_per_epoch)})
         model.eval()
         if eval_train_ds:
             met = evaluate_classification_model(model, train_ds, run_cfg)

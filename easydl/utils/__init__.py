@@ -6,19 +6,24 @@ import time
 import datetime
 import os
 
+
 def prepare_path(path):
     dirpath = os.path.dirname(path)
     os.makedirs(dirpath, exist_ok=True)
 
+
 def save_model(model, path):
+    """ create the dirs for the model path, then save the model"""
     prepare_path(path)
     torch.save(model.state_dict(), path)
+
 
 def set_random_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed) # set random seed for all gpus
+
 
 def binarize(T, nb_classes):
     device = T.device
@@ -39,12 +44,31 @@ def l2_norm(input):
     output = _output.view(input_size)
     return output
 
+
 def get_config_from_cmd(key, default=None, key_type=None):
+    """
+    It will return default value or value in the argument commend
+    if default is None, key_type should be given
+    """
     import argparse
-    pa = argparse.ArgumentParser()
+    pa = argparse.ArgumentParser(allow_abbrev=False)
     pa.add_argument('--{}'.format(key), type=type(default) if key_type is None else key_type, default=default)
     args = pa.parse_known_args()[0]
     return args.__dict__[key]
+
+
+def update_configs_from_cmd(config_dict, prefix=''):
+    """
+    config_dict: {key: value}
+    prefix: str, it's used to concat the key from arguments, for de-duplicating purpose. e.g., the original key is 'lr'
+            and the prefix is 'train-', the key used in args should be 'train-lr'.
+
+    """
+    for key, value in config_dict.items():
+        value1 = get_config_from_cmd('{}{}'.format(prefix, key), default=value)
+        config_dict[key] = value1
+
+
 
 class StringTextfileSaver():
     def __init__(self, filepath):

@@ -44,9 +44,10 @@ def train_simple_net():
     # get configurations from cmd
     project_name = get_config_from_cmd('project_name', 'simple_net_cifar_10')
     wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
+    data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
 
-    train_ds = CIFAR10('~/pytorch_data', train=True, download=True, transform=get_cifar_image_transformer())
-    test_ds = CIFAR10('~/pytorch_data', train=False, download=True, transform=get_cifar_image_transformer())
+    train_ds = CIFAR10(data_dir, train=True, download=True, transform=get_cifar_image_transformer())
+    test_ds = CIFAR10(data_dir, train=False, download=True, transform=get_cifar_image_transformer())
 
     print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
     model = SimpleNet(10)
@@ -62,8 +63,34 @@ def train_simple_net():
     train_image_classification_model_2021_nov(model, train_ds, train_cfg, run_cfg, metric_logger, test_ds=test_ds)
 
 
+def train_resnet_18():
+    # get configurations from cmd
+    project_name = get_config_from_cmd('project_name', 'cifar_10')
+    wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
+    data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
+    tags = get_config_from_cmd('tags', 'cifar10,resnet-18').split(',')
+
+    train_ds = CIFAR10(data_dir, train=True, download=True, transform=get_cifar_image_transformer())
+    test_ds = CIFAR10(data_dir, train=False, download=True, transform=get_cifar_image_transformer())
+
+    print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
+    from torchvision.models import resnet18
+    model = resnet18(pretrained=False, num_classes=10)
+
+    train_cfg = TrainingConfig(optimizer='sgd')
+    train_cfg.update_values_from_cmd()
+
+    run_cfg = RuntimeConfig()
+    metric_logger = prepare_logger(wandb_key=wandb_key,
+                                   project_name=project_name,
+                                   tags=tags,    # modify this accordingly !!!
+                                   )
+    metric_logger.update_config(train_cfg.__dict__)
+    print('training code version', easydl.__version__)
+    train_image_classification_model_2021_nov(model, train_ds, train_cfg, run_cfg, metric_logger, test_ds=test_ds)
+
 if __name__ == '__main__':
-    func_name = get_config_from_cmd('function', 'train_simple_net')
+    func_name = get_config_from_cmd('function', 'train_resnet_18')
     # run function
     globals()[func_name]()
 

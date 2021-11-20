@@ -70,7 +70,8 @@ def train_resnet_18():
     from torchvision.models import resnet18
     model = resnet18(pretrained=False, num_classes=10)
 
-    train_cfg = TrainingConfig(optimizer='sgd', lr=0.01, weight_decay=5e-4, lr_scheduler_type='cosine')
+    train_cfg = TrainingConfig(optimizer='sgd', lr=0.01, weight_decay=5e-4, lr_scheduler_type='cosine',
+                               train_epoch=200, train_batch_size=128)
     train_cfg.update_values_from_cmd()
 
     run_cfg = RuntimeConfig()

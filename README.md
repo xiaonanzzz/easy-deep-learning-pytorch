@@ -18,6 +18,13 @@ git -C $codedir fetch; git -C $codedir checkout 11618a4
 pip install -r $codedir/requirements.txt
 
 ## run cifar test
+```shell
 export PYTHONPATH=./easydl-v1.3:$PYTHONPATH;
 python3 -m easydl.example.cifar --wandb_key $wandb_key --lr 0.005 --function train_simple_net
+## resnet on cifar
+export PYTHONPATH="easydl-dev"; \
+echo $PYTHONPATH; \
+python3 -m easydl.example.cifar --wandb_key $wandb_key --function train_resnet_18
+```
+
 

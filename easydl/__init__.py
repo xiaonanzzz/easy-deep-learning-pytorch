@@ -1,6 +1,4 @@
-__version__ = 1.4
-# 0.4 update:
-# code refactor: configuration management
+__version__ = 1.5
 
 from .trainer import *
 from .utils import *

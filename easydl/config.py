@@ -106,12 +106,13 @@ class RuntimeConfig(ConfigBase):
 class TrainingConfig(ConfigBase):
     def __init__(self, *args, optimizer='sgd', lr=0.1, weight_decay=1e-4, momentum=0.9,
                  lr_scheduler_type='step', lr_decay_step=10, lr_decay_gamma=0.5,
-                 train_batch_size=30, train_epoch=30,  **kwargs):
+                 train_batch_size=30, train_epoch=30,  nesterov=False, **kwargs):
         super(TrainingConfig, self).__init__(*args, **kwargs)
         self.optimizer = optimizer
         self.lr = lr
         self.weight_decay = weight_decay
         self.momentum = momentum
+        self.nesterov = nesterov
 
         self.lr_scheduler_type = lr_scheduler_type
         self.lr_decay_step = lr_decay_step

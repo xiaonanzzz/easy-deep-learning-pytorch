@@ -5,7 +5,8 @@ from easydl.config import TrainingConfig
 
 def prepare_optimizer(args: TrainingConfig, param_groups):
     if args.optimizer == 'sgd':
-        opt = torch.optim.SGD(param_groups, lr=float(args.lr), weight_decay=args.weight_decay, momentum=args.momentum, nesterov=True)
+        opt = torch.optim.SGD(param_groups, lr=float(args.lr), weight_decay=args.weight_decay, momentum=args.momentum,
+                              nesterov=args.nesterov)
     elif args.optimizer == 'adam':
         opt = torch.optim.Adam(param_groups, lr=float(args.lr), weight_decay=args.weight_decay)
     elif args.optimizer == 'rmsprop':

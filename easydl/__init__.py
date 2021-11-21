@@ -1,4 +1,4 @@
-__version__ = 1.8
+__version__ = "1.9"
 
 from .trainer import *
 from .utils import *

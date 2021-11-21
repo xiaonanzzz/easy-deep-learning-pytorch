@@ -3,9 +3,9 @@ from torchvision.transforms import ToTensor, Normalize, Compose
 from torchvision import transforms
 import easydl
 from easydl.config import TrainingConfig, RuntimeConfig
-from easydl.models.simple_net import get_model_by_name
+from easydl.models.simple_net import SimpleNet
 from easydl.trainer.image_classification import train_image_classification_model_2021_nov
-from easydl.utils import get_config_from_cmd
+from easydl.utils import get_config_from_cmd, update_configs_from_cmd
 from easydl.utils.experiments import prepare_logger
 
 
@@ -25,84 +25,13 @@ def get_cifar_image_transformer():
     return Compose([ToTensor(), Normalize([0.5, 0.5, 0.5], [0.1, 0.1, 0.1])])
 
 
-def train_simple_net():
-    # get configurations from cmd
-    project_name = get_config_from_cmd('project_name', 'cifar_10')
-    wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
-    data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
-    tags = get_config_from_cmd('tags', 'cifar10,simple-net').split(',')
-    model_name = get_config_from_cmd('model_name', 'SimpleNetV2')
-
-    tags.append('ver-{}'.format(easydl.__version__))
-    tags.append('model-name-{}'.format(model_name))
-
-    train_ds = CIFAR10(data_dir, train=True, download=True, transform=get_cifar_image_transformer())
-    test_ds = CIFAR10(data_dir, train=False, download=True, transform=get_cifar_image_transformer())
-
-    print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
-    model_cls = get_model_by_name(model_name)
-    model = model_cls(10)
-
-    train_cfg = TrainingConfig(optimizer='sgd', lr=0.1)
-    train_cfg.update_values_from_cmd()
-
-    run_cfg = RuntimeConfig()
-    metric_logger = prepare_logger(wandb_key=wandb_key,
-                                   project_name=project_name,
-                                   tags=tags,    # modify this accordingly !!!
-                                   )
-    metric_logger.update_config(train_cfg.__dict__)
-    print('training code version', easydl.__version__)
-    train_image_classification_model_2021_nov(model, train_ds, train_cfg, run_cfg, metric_logger, test_ds=test_ds)
-
-
-def train_resnet_18():
-    # get configurations from cmd
-    project_name = get_config_from_cmd('project_name', 'cifar_10')
-    wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
-    data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
-    tags = get_config_from_cmd('tags', 'resnet-18').split(',')
-    tags.append('ver-{}'.format(easydl.__version__))
-
-    train_ds = CIFAR10(data_dir, train=True, download=True, transform=transform_train)
-    test_ds = CIFAR10(data_dir, train=False, download=True, transform=transform_test)
-
-    from torchvision.models import resnet18
-    model = resnet18(pretrained=False, num_classes=10)
-
-    train_cfg = TrainingConfig(optimizer='sgd', lr=0.01, weight_decay=5e-4, lr_scheduler_type='cosine',
-                               train_epoch=200, train_batch_size=128)
-    train_cfg.update_values_from_cmd()
-
-    run_cfg = RuntimeConfig()
-    metric_logger = prepare_logger(wandb_key=wandb_key,
-                                   project_name=project_name,
-                                   tags=tags,    # modify this accordingly !!!
-                                   )
-    metric_logger.update_config(train_cfg.__dict__)
-
-    print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
-    print('training code version', easydl.__version__)
-    train_image_classification_model_2021_nov(model, train_ds, train_cfg, run_cfg, metric_logger, test_ds=test_ds)
-
-def get_model(model_name):
-    if model_name == 'resnet18-si':
-        from easydl.models.resnet_small_image import ResNet18
-        return ResNet18(10)
-
-    if model_name == 'resnet18':
-        from torchvision.models import resnet18
-        model = resnet18(pretrained=False, num_classes=10)
-        return model
-
-
 def train_cifar():
     # get configurations from cmd
     project_name = get_config_from_cmd('project_name', 'cifar_10')
     wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
     data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
     model_name = get_config_from_cmd('model', 'resnet18-si')
-    tags = get_config_from_cmd('tags', '').split(',')
+    tags = get_config_from_cmd('tags', '', convert_to_list=True)
     tags.append('ver-{}'.format(easydl.__version__))
     tags.append(model_name)
 
@@ -122,7 +51,19 @@ def train_cifar():
 
     print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
     print('training code version', easydl.__version__)
-    model = get_model(model_name)
+
+    if model_name == 'resnet18-si':
+        from easydl.models.resnet_small_image import ResNet18
+        model = ResNet18(10)
+    if model_name == 'resnet18':
+        from torchvision.models import resnet18
+        model = resnet18(pretrained=False, num_classes=10)
+
+    if model_name == 'simplenet':
+        model_config = dict(channels=64, downsample_size=2, kernel_size=5)
+        update_configs_from_cmd(model_config, )
+        model = SimpleNet(10, **model_config)
+        metric_logger.update_config(model_config)
     train_image_classification_model_2021_nov(model, train_ds, train_cfg, run_cfg, metric_logger, test_ds=test_ds)
 
 

@@ -55,16 +55,22 @@ def l2_norm(input):
     return output
 
 
-def get_config_from_cmd(key, default=None, key_type=None):
+def get_config_from_cmd(key, default=None, key_type=None, kvdict=None, convert_to_list=False):
     """
     It will return default value or value in the argument commend
     if default is None, key_type should be given
     """
+    if kvdict is not None and key in kvdict:
+        return kvdict[key]
+
     import argparse
     pa = argparse.ArgumentParser(allow_abbrev=False)
     pa.add_argument('--{}'.format(key), type=type(default) if key_type is None else key_type, default=default)
     args = pa.parse_known_args()[0]
-    return args.__dict__[key]
+    value = args.__dict__[key]
+    if convert_to_list:
+        value = value.split(',') if len(value) > 0 else []
+    return value
 
 
 def update_configs_from_cmd(config_dict, prefix=''):

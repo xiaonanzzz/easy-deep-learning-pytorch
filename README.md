@@ -4,12 +4,30 @@
 # How to use it? 
 
 ## in jupyter note book
+
 ```
-codedir = 'easy-dl-repo'
-!git clone https://github.com/xiaonanzzz/easy-deep-learning-pytorch.git $codedir
-!git -C $codedir fetch; git -C $codedir checkout 11618a4
+# checkout the latest version
 import sys
+
+codedir = 'easy-dl-repo/main'
+!git clone https://github.com/xiaonanzzz/easy-deep-learning-pytorch.git $codedir
+!git -C $codedir fetch; git -C $codedir pull
 sys.path.append(codedir)
+```
+
+```ipython
+# checkout the latest version
+import sys
+ver = '084689d'
+codedir = 'easy-dl-repo/' + ver
+!git clone https://github.com/xiaonanzzz/easy-deep-learning-pytorch.git $codedir
+!git -C $codedir fetch; git -C $codedir checkout $ver
+sys.path.append(codedir)
+```
+
+```shell
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+
 ```
 
 # install conda

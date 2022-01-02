@@ -2,14 +2,15 @@ import argparse
 import json
 
 import torchvision
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision import transforms as T
 from torchvision.io import read_image, write_png
 from torchvision.io.image import ImageReadMode
 from torchvision.utils import draw_bounding_boxes
 import torchvision.transforms.functional as F
 import torch
 from collections import Counter
+from easydl.datasets.coco_detection import LabelNameDict2017
+
+
 
 def main():
     pa = argparse.ArgumentParser()
@@ -18,6 +19,7 @@ def main():
     args = pa.parse_args()
 
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+
     model.eval()
 
     img = read_image(args.input_image, ImageReadMode.RGB)
@@ -39,6 +41,7 @@ def main():
     prediction_data['label distribution'] = Counter(y['labels'].detach().numpy().tolist())
     prediction_data['detections'] = [{'box': y['boxes'][i].detach().numpy().tolist(),
                                       'label': y['labels'][i].item(),
+                                      'name': LabelNameDict2017[y['labels'][i].item()],
                                       'score': float(y['scores'][i].item())}
                                      for i in range(len(y['boxes']))]
     print(prediction_data)

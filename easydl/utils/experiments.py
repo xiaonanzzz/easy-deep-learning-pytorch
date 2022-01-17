@@ -1,6 +1,6 @@
 import os
 from collections import Counter
-
+from .common import get_config_from_cmd
 
 class PrinterInterface(object):
 
@@ -149,10 +149,37 @@ class WandbLogger(MetricLogger):
             return
         self.run.finish()
 
+def get_wandb_key():
+    wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
+    if wandb_key is not None:
+        return wandb_key
+
+    print('trying to get wandb key from os env')
+    wandb_key = os.getenv('WANDB_KEY')
+    if wandb_key is not None:
+        return wandb_key
+
+    if os.path.exists(os.path.expanduser('~/wandb_key.txt')):
+        with open(os.path.expanduser('~/wandb_key.txt'), 'rt') as f:
+            wandb_key = f.read()
+            if wandb_key is not None:
+                return wandb_key
+
+    return None
+
 
 def prepare_logger(wandb_key=None, filepath=None, project_name=None, tags=None, ):
+    """
+    wandb_key: [None, str (key), 'auto'], if 'auto', will try to get key from commend arg, system env, or ~/wandb_key.txt
+    """
     loggers = [PrintMetricLogger(filepath=filepath)]
-    if wandb_key:
+
+    if wandb_key == 'auto':
+        wandb_key = get_wandb_key()
+
+    if wandb_key is not None:
         assert project_name is not None
-        loggers.append(WandbLogger(project=project_name, api_key=wandb_key, tags=tags))
+        wandb_logger = WandbLogger(project=project_name, api_key=wandb_key, tags=tags)
+        loggers.append(wandb_logger)
+
     return MultiMetricLogger(loggers)

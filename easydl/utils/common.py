@@ -15,10 +15,16 @@ def to_numpy(x):
     else:
         return np.array(x)
 
+
 def prepare_path(path):
     dirpath = os.path.dirname(path)
     os.makedirs(dirpath, exist_ok=True)
 
+
+def expand_path(path):
+    path = os.path.expanduser(path)
+    path = os.path.expandvars(path)
+    return path
 
 def save_model(model, path):
     """ create the dirs for the model path, then save the model"""
@@ -73,11 +79,14 @@ def get_config_from_cmd(key, default=None, key_type=None, kvdict=None, convert_t
 
 def update_configs_from_cmd(config_dict, prefix=''):
     """
-    config_dict: {key: value}
+    config_dict: {key: value} | object (__dict__ will be used)
     prefix: str, it's used to concat the key from arguments, for de-duplicating purpose. e.g., the original key is 'lr'
             and the prefix is 'train-', the key used in args should be 'train-lr'.
 
     """
+    if isinstance(config_dict, object):
+        config_dict = config_dict.__dict__
+
     for key, value in config_dict.items():
         value1 = get_config_from_cmd('{}{}'.format(prefix, key), default=value)
         config_dict[key] = value1

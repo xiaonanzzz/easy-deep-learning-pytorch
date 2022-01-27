@@ -110,21 +110,18 @@ class PrintMetricLogger(MetricLogger):
 
 
 class WandbLogger(MetricLogger):
-    def __init__(self, *args, project='<noname>', tags=None, api_key='', prepare=True, **kwargs):
+    def __init__(self, *args, project='<noname>', tags=None, api_key='', working_dir=None, **kwargs):
         super(WandbLogger, self).__init__(*args, **kwargs)
         self.project = project
         self.tags = tags or list()
         self.api_key = api_key
         self.run = None
+        self.working_dir = working_dir
         self.log_count = Counter()
 
-        if prepare:
-            self.prepare()
-
-    def prepare(self):
         import wandb
         os.system('wandb login {}'.format(self.api_key))
-        self.run = wandb.init(project=self.project, tags=self.tags)
+        self.run = wandb.init(project=self.project, tags=self.tags, dir=self.working_dir)
 
     def update_config(self, config_dict):
         if self.run is None:
@@ -149,8 +146,9 @@ class WandbLogger(MetricLogger):
             return
         self.run.finish()
 
-def get_wandb_key():
-    wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
+
+def get_wandb_key(arg_name='wandb_key'):
+    wandb_key = get_config_from_cmd(arg_name, None, key_type=str)
     if wandb_key is not None:
         return wandb_key
 
@@ -158,7 +156,7 @@ def get_wandb_key():
     wandb_key = os.getenv('WANDB_KEY')
     if wandb_key is not None:
         return wandb_key
-
+    print('trying to get wandb key from local ~/wandb_key.txt')
     if os.path.exists(os.path.expanduser('~/wandb_key.txt')):
         with open(os.path.expanduser('~/wandb_key.txt'), 'rt') as f:
             wandb_key = f.read()
@@ -183,3 +181,15 @@ def prepare_logger(wandb_key=None, filepath=None, project_name=None, tags=None, 
         loggers.append(wandb_logger)
 
     return MultiMetricLogger(loggers)
+
+
+class WandbExperiment():
+    def __init__(self, project_name, working_dir=None, tags=[]):
+        self.project_name = get_config_from_cmd('project', default=None, key_type=str)
+        self.working_dir = working_dir
+        if working_dir is not None:
+            os.makedirs(working_dir, exist_ok=True)
+
+        self.metric_logger = WandbLogger(project=project_name, api_key=get_wandb_key(), tags=tags, working_dir=working_dir)
+
+

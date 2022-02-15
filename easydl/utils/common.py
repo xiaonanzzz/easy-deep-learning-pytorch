@@ -84,7 +84,9 @@ def update_configs_from_cmd(config_dict, prefix=''):
             and the prefix is 'train-', the key used in args should be 'train-lr'.
 
     """
-    if isinstance(config_dict, object):
+    if isinstance(config_dict, dict):
+        config_dict = config_dict
+    else:
         config_dict = config_dict.__dict__
 
     for key, value in config_dict.items():

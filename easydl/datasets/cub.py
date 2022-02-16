@@ -4,6 +4,8 @@ import pandas as pd
 from easydl.datasets import ImageDataset
 import numpy as np
 from torchvision.transforms import ToTensor, Resize, Normalize
+from easydl.trainer.metrics import recall_in_k_self_retrieval
+from easydl.utils import expand_path
 
 
 _default_image_transformer = torchvision.transforms.Compose([
@@ -11,6 +13,9 @@ _default_image_transformer = torchvision.transforms.Compose([
     ToTensor(),
     Normalize(0.45, 0.22),      # simple version from https://pytorch.org/vision/stable/models.html
 ])
+
+_metric_learning_evaluation_k_list = [1, 2, 4, 8]
+
 
 
 class CUBirdsHelper(object):
@@ -72,20 +77,26 @@ class Cub2011MetricLearningDS:
     def __getitem__(self, idx):
         return self.dataset[idx]
 
+
+class CubMetricLearningExperiment():
+    def __init__(self, data_path):
+        self.data_path = expand_path(data_path)
+        self.testds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=_default_image_transformer)
+        self.trainds = Cub2011MetricLearningDS(self.data_path, image_transform=_default_image_transformer)
+        self.k_list = _metric_learning_evaluation_k_list
+
+    def evaluate_model(self, model):
+        model.eval()
+        recall_at_k = recall_in_k_self_retrieval(model, self.testds, self.k_list)
+        print(recall_at_k)
+
+
+def _test_cub_experiment():
+    from easydl.models.simple_net import SimpleNetEmbedder
+    exp = CubMetricLearningExperiment('~/data/CUB_200_2011')
+    model = SimpleNetEmbedder()
+    exp.evaluate_model(model)
+
 if __name__ == '__main__':
-    from easydl.utils import expand_path
-    cub = CUBirdsHelper(expand_path('~/data/CUB_200_2011'))
-    print(cub.meta_df)
-    trainds = Cub2011MetricLearningDS(expand_path('~/data/CUB_200_2011'), item_schema=('image', 'label_code', 'name'))
-    print(trainds.data.shape)
-    print(trainds.data.nunique())
-    print(trainds[0])
-    testds = Cub2011MetricLearningDS(expand_path('~/data/CUB_200_2011'), split='test', item_schema=('image', 'label_code', 'name'))
-    print(testds.data.shape)
-    print(testds.data.nunique())
-    print(testds[0])
-
-
-
-
+    _test_cub_experiment()
 

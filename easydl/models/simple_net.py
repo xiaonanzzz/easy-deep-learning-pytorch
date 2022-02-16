@@ -49,6 +49,28 @@ class SimpleNet(nn.Module):
         else:
             return torch.argmax(x, dim=1)
 
+class SimpleNetEmbedder(nn.Module):
+
+    def __init__(self, embedding_size=32, channels=64, downsample_size=2, kernel_size=5) -> None:
+        super(SimpleNetEmbedder, self).__init__()
+        padding = kernel_size // 2
+        self.channels = channels
+        self.pooling = nn.AdaptiveAvgPool2d((1, 1))
+        self.features = nn.Sequential(
+            nn.Conv2d(3, self.channels, kernel_size=kernel_size, padding=padding),
+            nn.ReLU(inplace=True),
+            nn.AvgPool2d(downsample_size, ),
+            nn.Conv2d(self.channels, self.channels, kernel_size=kernel_size, padding=padding),
+            nn.ReLU(inplace=True),
+        )
+        self.embedder = nn.Linear(self.channels, embedding_size)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.features(x)
+        x = self.pooling(x)
+        x = torch.flatten(x, 1)     # batch, channels, 1, 1
+        x = self.embedder(x)
+        return x
 
 class SimpleNetV2(nn.Module):
 

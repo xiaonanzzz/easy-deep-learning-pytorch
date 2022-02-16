@@ -20,7 +20,7 @@ class ImageDataset:
         self.item_schema = item_schema
 
     def __len__(self):
-        return len(self.ys)
+        return len(self.labels)
 
     def __getitem__(self, index):
         ret = []

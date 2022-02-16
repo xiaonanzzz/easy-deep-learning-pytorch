@@ -44,6 +44,11 @@ def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_
     return out
 
 def batch_process_x_y_dataset_and_concat(dataset, model, **kwargs):
+    """ Given a dataset consisting of input(x) and target(y),
+    run the given <model> on <x> -> <x'>
+    return x' and y
+    For example, given a dataset of images and labels, a model of embedding model, the output are embeddings and target
+    """
     x, y = process_dataset_by_batch(dataset, model, **kwargs)
     x = torch.cat(x, dim=0)
     y = torch.cat(y, dim=0)

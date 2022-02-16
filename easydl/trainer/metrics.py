@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
+from easydl.utils import batch_process_x_y_dataset_and_concat
 
 class RetrivalMetricsBase(object):
 
@@ -10,7 +11,7 @@ class RetrivalMetricsBase(object):
         pass
 
 
-def recall_in_k_pytorch(query_x, query_y, index_x, index_y, ks=1, metric='cosine', ignore_k=0):
+def recall_in_k_pytorch(query_x, query_y, index_x, index_y, k_list=1, metric='cosine', ignore_k=0):
     qx, qy = query_x, query_y
     ix, iy = index_x, index_y
     assert qx.shape[1] == ix.shape[1] and qx.shape[0] == qy.shape[0] and ix.shape[0] == iy.shape[0]
@@ -33,12 +34,29 @@ def recall_in_k_pytorch(query_x, query_y, index_x, index_y, ks=1, metric='cosine
         match_mat = match_mat.sum(dim=1) > 0
         match = match_mat.sum().item()
         return float(match) / float(total)
-    if isinstance(ks, int):
-        return recall_k(ks)
-    elif type(ks) in [list, tuple]:
-        return {k: recall_k(k) for k in ks}
+    if isinstance(k_list, int):
+        return recall_k(k_list)
+    elif type(k_list) in [list, tuple]:
+        return {k: recall_k(k) for k in k_list}
     else:
         raise TypeError('Ks type not supported')
+
+
+def recall_in_k_self_retrieval(model, testds, k_list):
+    """
+    return: a dictionary of { k (int): recall_at_k (float) }
+    """
+
+    # calculate embeddings with model and get targets
+    model.eval()
+    print('processing input data to get embedding and labels...')
+    x, y = batch_process_x_y_dataset_and_concat(testds, model, tqdm_disable=False)
+
+    # because it's self retrieval, so ignore the first one
+    print('calulating recall...')
+    ret = recall_in_k_pytorch(x, y, x, y, k_list=k_list, ignore_k=1)
+
+    return ret
 
 
 def recall_in_k_sklearn(query_x, query_y, index_x, index_y, ks=1, metric='cosine', ignore_k=0, n_jobs=4, store=None):

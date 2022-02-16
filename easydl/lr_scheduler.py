@@ -10,5 +10,3 @@ def prepare_lr_scheduler(args: TrainingConfig, opt):
         raise NotImplementedError()
 
     return lr
-
-

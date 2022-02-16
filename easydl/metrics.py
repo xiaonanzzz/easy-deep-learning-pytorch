@@ -49,7 +49,7 @@ def recall_in_k_self_retrieval(model, testds, k_list):
 
     # calculate embeddings with model and get targets
     model.eval()
-    print('processing input data to get embedding and labels...')
+    print('processing input datasets to get embedding and labels...')
     x, y = batch_process_x_y_dataset_and_concat(testds, model, tqdm_disable=False)
 
     # because it's self retrieval, so ignore the first one

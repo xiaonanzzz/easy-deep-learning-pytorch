@@ -4,9 +4,8 @@ import pandas as pd
 from easydl.datasets import ImageDataset
 import numpy as np
 from torchvision.transforms import ToTensor, Resize, Normalize
-from easydl.trainer.metrics import recall_in_k_self_retrieval
-from easydl.utils import expand_path
-
+from easydl.metrics import recall_in_k_self_retrieval
+from easydl.common import expand_path
 
 _default_image_transformer = torchvision.transforms.Compose([
     Resize((224, 224)),
@@ -42,14 +41,14 @@ class CUBirdsHelper(object):
         train_test_split = pd.read_csv(os.path.join(self.root, 'CUB_200_2011', 'train_test_split.txt'),
                                        sep=' ', names=['image_id', 'is_training_img'])
         meta_df = meta_df.merge(train_test_split, on='image_id')
-        # meta df is merged data profile
+        # meta df is merged datasets profile
         self.meta_df = meta_df
 
 
 class Cub2011MetricLearningDS:
     """
-    train data has 5864, label in [1, 100]
-    test data has 5924, label in [101, 200]
+    train datasets has 5864, label in [1, 100]
+    test datasets has 5924, label in [101, 200]
     """
     def __init__(self, root, split='train', image_transform=None, item_schema=('image', 'label_code'), **kwargs):
         self.cub = CUBirdsHelper(root)
@@ -69,7 +68,7 @@ class Cub2011MetricLearningDS:
 
         self.dataset = ImageDataset(image_path, labels, transform=image_transform, item_schema=item_schema)
 
-        print('cub 2011 metric learning dataset data size', split, self.data.shape)
+        print('cub 2011 metric learning dataset datasets size', split, self.data.shape)
 
     def __len__(self):
         return len(self.dataset)
@@ -92,7 +91,7 @@ class CubMetricLearningExperiment():
 
 
 def _test_cub_experiment():
-    from easydl.models.simple_net import SimpleNetEmbedder
+    from easydl.simple_net import SimpleNetEmbedder
     exp = CubMetricLearningExperiment('~/data/CUB_200_2011')
     model = SimpleNetEmbedder()
     exp.evaluate_model(model)

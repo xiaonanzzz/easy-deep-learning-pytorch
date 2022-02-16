@@ -1,9 +1,8 @@
-import torch
 from easydl.datasets.cub import Cub2011MetricLearningDS
-from easydl.trainer.metric_learning import *
+from easydl.metric_learning import *
 from torch import nn
 from easydl.models import L2Normalization
-from easydl.utils.experiments import WandbLogger, MetricLogger
+from easydl.experiments import WandbLogger, MetricLogger
 from easydl.config import *
 
 class SimpleNet(nn.Module):
@@ -35,7 +34,7 @@ def simple_net_example():
     train_data = Cub2011MetricLearningDS(os.path.expanduser('~/data/CUB_200_2011'), split='train')
     test_data = Cub2011MetricLearningDS(os.path.expanduser('~/data/CUB_200_2011'), split='test')
 
-    print('data shape', train_data[0][0].shape, train_data[0])
+    print('datasets shape', train_data[0][0].shape, train_data[0])
     embsize = 32
     model = SimpleNet(embsize)
 
@@ -60,13 +59,13 @@ def resnet50_example():
     :return:
     """
     import os
-    from easydl.models.cnn_embedder import Resnet50PALVersion
+    from easydl.cnn_embedder import Resnet50PALVersion
     print('working directory', os.getcwd())
 
     train_data = Cub2011MetricLearningDS(os.path.expanduser('~/data/CUB_200_2011'), split='train')
     test_data = Cub2011MetricLearningDS(os.path.expanduser('~/data/CUB_200_2011'), split='test')
 
-    print('data shape', train_data[0][0].shape, train_data[0])
+    print('datasets shape', train_data[0][0].shape, train_data[0])
     embsize = 512
     model = Resnet50PALVersion(embsize)
 
@@ -74,7 +73,7 @@ def resnet50_example():
     trainer.epoch_end_hook = EpochEndEvaluationHook(model, test_data)
     trainer.train()
 
-def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None, data_folder='~/data/CUB_200_2011'):
+def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None, data_folder='~/datasets/CUB_200_2011'):
     """
     reproducing the result from https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
     python train.py --gpu-id 0 \
@@ -91,14 +90,14 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper(wandb_api=None, data_fo
     :return:
     """
     import os
-    from easydl.models.cnn_embedder import Resnet50PALVersion
+    from easydl.cnn_embedder import Resnet50PALVersion
 
     print('working directory', os.getcwd())
 
     train_data = Cub2011MetricLearningDS(os.path.expanduser(data_folder), split='train')
     test_data = Cub2011MetricLearningDS(os.path.expanduser(data_folder), split='test')
 
-    print('data shape', train_data[0][0].shape, train_data[0])
+    print('datasets shape', train_data[0][0].shape, train_data[0])
     embsize = 512
     model = Resnet50PALVersion(embsize, pretrained=False, bn_freeze=False)
     metric_logger = WandbLogger(project='cub-reproduce', tags=['resnet50', 'proxy-anchor-loss', ], api_key=wandb_api, prepare=True) if wandb_api else MetricLogger()

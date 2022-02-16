@@ -27,8 +27,6 @@ class ConfigBase(object):
     def __init__(self, *args, **kwargs):
         super(ConfigBase, self).__init__(*args, **kwargs)
 
-    def core_config(self):
-        return {k: v for k, v in self.__dict__.items() if ConfigBase.is_core_config(v)}
 
     def all_config(self):
         return self.__dict__.copy()
@@ -38,7 +36,7 @@ class ConfigBase(object):
             self.__dict__[k] = v
 
     def update_values_from_cmd(self, prefix=''):
-        from .utils import update_configs_from_cmd
+        from easydl.common import update_configs_from_cmd
         update_configs_from_cmd(self.__dict__, prefix=prefix)
 
 
@@ -118,7 +116,7 @@ class TrainingConfig(ConfigBase):
         self.lr_decay_step = lr_decay_step
         self.lr_decay_gamma = lr_decay_gamma
 
-        # data related configurations
+        # datasets related configurations
         self.train_batch_size = train_batch_size
         self.train_epoch = train_epoch
 

@@ -1,10 +1,55 @@
-import torch
-
-import random
-import numpy as np
-import time
 import datetime
 import os
+import random
+import time
+
+import sklearn.preprocessing
+import torch
+import easydl
+import numpy as np
+
+class LossAverage(object):
+
+    def __init__(self):
+        self.losses = []
+
+    def append(self, loss):
+        self.losses.append(loss)
+
+
+class TrainAccuracyAverage():
+    def __init__(self):
+        self.prediction = []
+        self.truth = []
+        self.scores = []
+
+    def update(self, pred, truth):
+        """
+        pred: torch.Tensor N*M, N*1, N,
+        truth: torch.Tensor  N
+        """
+        truth = to_numpy(truth)
+        assert truth.ndim == 1
+        pred = np.squeeze(to_numpy(pred))
+        assert pred.ndim == 2 or pred.ndim == 1
+        self.truth.extend(truth)
+        if pred.ndim == 2:
+            pred = pred.argmax(axis=1)
+        self.prediction.extend(pred)
+
+    def accuracy(self):
+        pred = np.array(self.prediction)
+        truth = np.array(self.truth)
+        return (pred == truth).mean()
+
+
+class ModelSaveEpochHook:
+    def __init__(self, model, filepath):
+        self.model = model
+        self.filepath = filepath
+
+    def __call__(self, *args, **kwargs):
+        save_model(self.model, self.filepath)
 
 
 def to_numpy(x):
@@ -25,6 +70,7 @@ def expand_path(path):
     path = os.path.expanduser(path)
     path = os.path.expandvars(path)
     return path
+
 
 def save_model(model, path):
     """ create the dirs for the model path, then save the model"""
@@ -48,6 +94,7 @@ def binarize(T, nb_classes):
     )
     T = torch.FloatTensor(T).to(device)
     return T
+
 
 def l2_norm(input):
     input_size = input.size()
@@ -101,6 +148,7 @@ class StringTextfileSaver():
     def save(self, obj):
         with open(self.filepath, 'w') as f:
             f.write(str(obj))
+
 
 class ModelSaver():
     def __init__(self, filepath):

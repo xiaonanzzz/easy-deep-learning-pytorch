@@ -7,7 +7,7 @@ import numpy as np
 class ImageDataset:
     def __init__(self, im_paths, labels, transform=None, item_schema=('image', 'label_code')):
         """
-        item schema: a tuple/array indicating what data should be returned,
+        item schema: a tuple/array indicating what datasets should be returned,
         such as, image | label | index | label_code | name
         label_code starts from 0
         """

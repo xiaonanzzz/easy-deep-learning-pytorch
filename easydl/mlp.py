@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from . import L2Normalization
+from easydl.models import L2Normalization
 
 
 

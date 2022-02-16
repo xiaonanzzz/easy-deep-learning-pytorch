@@ -3,10 +3,10 @@ from torchvision.transforms import ToTensor, Normalize, Compose
 from torchvision import transforms
 import easydl
 from easydl.config import TrainingConfig, RuntimeConfig
-from easydl.models.simple_net import SimpleNet, SimpleNetV2
-from easydl.trainer.image_classification import train_image_classification_model_2021_nov
-from easydl.utils import get_config_from_cmd, update_configs_from_cmd
-from easydl.utils.experiments import prepare_logger
+from easydl.simple_net import SimpleNet, SimpleNetV2
+from easydl.image_classification import train_image_classification_model_2021_nov
+from easydl.common import get_config_from_cmd, update_configs_from_cmd
+from easydl.experiments import prepare_logger
 
 
 transform_train = transforms.Compose([
@@ -49,11 +49,11 @@ def train_cifar():
     train_ds = CIFAR10(data_dir, train=True, download=True, transform=transform_train)
     test_ds = CIFAR10(data_dir, train=False, download=True, transform=transform_test)
 
-    print('train data shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
+    print('train datasets shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
     print('training code version', easydl.__version__)
 
     if model_name == 'resnet18-si':
-        from easydl.models.resnet_small_image import ResNet18
+        from easydl.resnet_small_image import ResNet18
         model = ResNet18(10)
     if model_name == 'resnet18':
         from torchvision.models import resnet18

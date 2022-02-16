@@ -1,19 +1,13 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import random
 import numpy as np
 from torch.utils.data.sampler import BatchSampler
 
-from easydl import batch_process_x_y_dataset_and_concat
-from easydl.trainer.metrics import RetrivalMetricsSklearn
-
-from easydl.utils import l2_norm, binarize
-from easydl.trainer.optimizer import prepare_optimizer
-from easydl.trainer.lr_scheduler import prepare_lr_scheduler
-from easydl.trainer import EpochTrainer
+from easydl.common import binarize, l2_norm
+from easydl.optimizer import prepare_optimizer
+from easydl.lr_scheduler import prepare_lr_scheduler
 from easydl.config import *
-from easydl.utils.experiments import MetricLogger, PrintMetricLogger
+from easydl.experiments import PrintMetricLogger
 
 from tqdm import *
 
@@ -50,7 +44,7 @@ class ProxyAnchorLoss(torch.nn.Module):
         neg_exp = torch.exp(self.alpha * (cos + self.mrg))
 
         with_pos_proxies = torch.nonzero(P_one_hot.sum(dim=0) != 0).squeeze(
-            dim=1)  # The set of positive proxies of data in the batch
+            dim=1)  # The set of positive proxies of datasets in the batch
         num_valid_proxies = len(with_pos_proxies)  # The number of positive proxies
 
         P_sim_sum = torch.where(P_one_hot == 1, pos_exp, torch.zeros_like(pos_exp)).sum(dim=0)
@@ -72,6 +66,20 @@ class ProxyAnchorLossConfigContainer(ConfigContainer):
         self.runtime = RuntimeConfig()
 
 
+class EpochTrainer(object):
+
+    def __init__(self, *args, **kwargs):
+        super(EpochTrainer, self).__init__(*args, **kwargs)
+        self.epoch_end_hook = None  # optional
+
+    def train(self):
+        pass
+
+    def on_epoch_end(self):
+        if self.epoch_end_hook is not None:
+            self.epoch_end_hook()
+
+
 class ProxyAnchorLossEmbeddingModelTrainer(ConfigConsumer, EpochTrainer):
 
     def __init__(self, model, train_dataset, sz_embedding, nb_classes, *args,
@@ -85,7 +93,7 @@ class ProxyAnchorLossEmbeddingModelTrainer(ConfigConsumer, EpochTrainer):
 
         # run time arguments
         self.model = model           # take input from train_dataset[i][0], generate embedding vector of D
-        self.train_dataset = train_dataset   # train_dataset[i][0] is input data, train_dataset[i][1] is label int
+        self.train_dataset = train_dataset   # train_dataset[i][0] is input datasets, train_dataset[i][1] is label int
         self.sz_embedding = sz_embedding    # number of dimensions in embedding D
         self.nb_classes = nb_classes      # number of classes in set( train_dataset[i][1] )
         self.metric_logger = metric_logger       # by default metric logger, do nothing

@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from collections import Counter
 
-from easydl import prepare_path
+from easydl.common import prepare_path
 
 KEY_CLUSTERS = 'clusters'
 KEY_CLASSES = 'classes'

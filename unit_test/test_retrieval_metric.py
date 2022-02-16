@@ -12,7 +12,7 @@ class MyTestCase(unittest.TestCase):
         qx = torch.randn((qn, d))
         qy = torch.randint(0, 3, (qn,) )
 
-        ret1 = recall_in_k_pytorch(qx, qy, qx, qy, ks=[1, 2, 3, 4, 5])
+        ret1 = recall_in_k_pytorch(qx, qy, qx, qy, k_list=[1, 2, 3, 4, 5])
         ret2 = recall_in_k_sklearn(qx, qy, qx, qy, ks=[1, 2, 3, 4, 5])
 
         for k in range(1, 6):
@@ -26,7 +26,7 @@ class MyTestCase(unittest.TestCase):
         qy = torch.randint(0, 3, (qn,) )
         ix, iy = torch.randn((gn, d)), torch.randint(0, 3, (gn,) )
 
-        ret1 = recall_in_k_pytorch(qx, qy, ix, iy, ks=[1, 2, 3, 4, 5])
+        ret1 = recall_in_k_pytorch(qx, qy, ix, iy, k_list=[1, 2, 3, 4, 5])
         ret2 = recall_in_k_sklearn(qx, qy, ix, iy, ks=[1, 2, 3, 4, 5])
 
         print(ret1)

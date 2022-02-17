@@ -81,7 +81,7 @@ class Cub2011MetricLearningDS:
 
 class CubMetricLearningExperiment:
     def __init__(self):
-        self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011', do_expand_path=True)
+        self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011')
         self.train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=None)
         self.test_ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=None)
         self.k_list = _metric_learning_evaluation_k_list

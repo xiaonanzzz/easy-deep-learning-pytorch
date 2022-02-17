@@ -149,8 +149,8 @@ class WandbLogger(MetricLogger):
 
 
 def get_wandb_key(arg_name='wandb_key'):
-    wandb_key = get_config_from_cmd(arg_name, None, value_type=str)
-    if wandb_key is not None:
+    wandb_key = get_config_from_cmd(arg_name, '')
+    if wandb_key != '':
         return wandb_key
 
     print('trying to get wandb key from os env')

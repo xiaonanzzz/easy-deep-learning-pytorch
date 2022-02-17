@@ -34,9 +34,7 @@ def merging_configs(*configs: [ConfigBase]):
 
 class RuntimeConfig(ConfigBase):
     def __init__(self, *args, **kwargs):
-        self.device = None
-        if self.device is None:
-            self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        self.device = parse_torch_device('auto')
         self.cpu_workers = 4
         self.tqdm_disable = 0
         self.infer_batch_size = 128
@@ -69,23 +67,46 @@ class TrainingConfig(ConfigBase):
         # read from kwargs
         self.from_dict(kwargs)
 
+def parse_torch_device(device_str):
+    """ auto, cpu, cuda, cuda:0, ..."""
+    if device_str == 'auto':
+        return torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    else:
+        return torch.device(device_str)
 
-def get_config_from_cmd(key, default=None, value_type=None, convert_to_list=False, do_expand_path=False):
+def get_config_from_cmd(key, default=None, do_not_expand_path=False):
     """
-    It will return default value or value in the argument commend
-    if default is None, key_type should be given
-    expand_path: True/False, if it is true, then call expand_path
-    """
+    return default value or get from cmd
 
+    """
     import argparse
     pa = argparse.ArgumentParser(allow_abbrev=False)
-    pa.add_argument('--{}'.format(key), type=value_type, default=default)
+    if type(default) in [int, float]:
+        t = type(default)
+    elif type(default) == type(None):
+        t = None
+    elif type(default) in [str, list, torch.device, bool]:
+        t = str
+    else:
+        raise NotImplementedError('the given default is not supported', default, type(default), key)
+
+    pa.add_argument('--{}'.format(key), type=t, default=default)
     args = pa.parse_known_args()[0]
     value = args.__dict__[key]
-    if convert_to_list or type(default) == list:
-        value = value.split(',') if len(value) > 0 else []
-    if type(value) == str and do_expand_path:
-        return expand_path(value)
+    if type(value) == str:
+        if len(value) > 0 and (value[0] in ['~', '$']) and not do_not_expand_path:
+            value = expand_path(value)
+        elif type(default) == list:
+            value = value.split(',') if len(value) > 0 else []
+        elif type(default) == torch.device:
+            value = parse_torch_device(value)
+        elif type(default) == bool:
+            if value in ['False', 'false', 0]:
+                value = False
+            else:
+                value = True
+    if type(value) != type(default):
+        print('WARNING!!! type difference: parsed value vs. default ', value, default)
     return value
 
 

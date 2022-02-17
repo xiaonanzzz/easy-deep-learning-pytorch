@@ -3,8 +3,7 @@ from tqdm import tqdm
 from torch.utils.data import TensorDataset
 import numpy as np
 
-def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_index=1,
-                             device=torch.device('cpu'), out_device=torch.device('cpu'),
+def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_index=1, out_device=torch.device('cpu'),
                              tqdm_disable=True,
                              tqdm_description=''):
     """
@@ -14,10 +13,10 @@ def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_
     :param input_index:     which one is the input value of model
     :param batch_size:
     :param save_index:      which index/indices should be kept and return
-    :param device:          which device to run the model
     :param out_device:      which device to save the result
     :return:
     """
+    device = next(model.parameters()).device
     dl = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,

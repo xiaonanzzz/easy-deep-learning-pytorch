@@ -24,20 +24,23 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
     from easydl.cnn_embedder import Resnet50PALVersion
     # prepare configurations
     train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-4, momentum=0.9,
-              lr_scheduler_type='cosine', train_batch_size=10, train_epoch=30, nesterov=False)
+              lr_scheduler_type='cosine', train_batch_size=120, train_epoch=50, nesterov=False)
     train_cfg.update_values_from_cmd()
     run_cfg = RuntimeConfig()
     run_cfg.update_values_from_cmd()
     algo_cfg = ProxyAnchorLossConfig()
     algo_cfg.update_values_from_cmd()
 
+    model_cfg = dict(pretrained=True, bn_freeze=True)
+
     # prepare experiments
     cub_exp = CubMetricLearningExperiment()
     wandb_exp = WandbExperiment(run_cfg)
-    model = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=False, bn_freeze=False)
+    model = Resnet50PALVersion(algo_cfg.embedding_size, **model_cfg)
     metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
+    metric_logger.update_config(model_cfg)
 
     def epoch_end(**kwargs):
         print('evaluting the model on testing data...')

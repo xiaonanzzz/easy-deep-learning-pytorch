@@ -1,7 +1,7 @@
 import os
 from collections import Counter
-from easydl.config import get_config_from_cmd, RuntimeConfig
-
+from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path
+import easydl
 
 class PrinterInterface(object):
 
@@ -189,9 +189,10 @@ class WandbExperiment:
         """
         Api key should be stored in ~/wandb_key.txt, or set by --wandb_key
         """
-        working_dir = run_cfg.wandb_dir
+        working_dir = expand_path(run_cfg.wandb_dir)
         os.makedirs(working_dir, exist_ok=True)
         tags = run_cfg.tags
+        tags.append('easydl-v-' + easydl.__version__)
         key = get_wandb_key()
         if key is None:
             raise RuntimeError('cannot find wandb key, Api key should be stored in ~/wandb_key.txt, or set by --wandb_key')

@@ -43,7 +43,10 @@ class RuntimeConfig(ConfigBase):
         self.tqdm_disable = tqdm_disable
         self.infer_batch_size = infer_batch_size
         self.model_dir = model_dir
-        self.wandb_dir = '~/wandb-exp'
+
+        self.project_name = kwargs.get('project_name', 'debug')
+        self.wandb_dir = kwargs.get('wandb_dir', '~/wandb-exp')
+        self.tags = kwargs.get('tags', '')
 
 
 class TrainingConfig(ConfigBase):
@@ -67,15 +70,13 @@ class TrainingConfig(ConfigBase):
         self.train_epoch = train_epoch
 
 
-def get_config_from_cmd(key, default=None, key_type=None, kvdict=None, convert_to_list=False, do_expand_path=False):
+def get_config_from_cmd(key, default=None, key_type=None, convert_to_list=False, do_expand_path=False):
     """
     It will return default value or value in the argument commend
     if default is None, key_type should be given
     expand_path: True/False, if it is true, then call expand_path
     """
-    if kvdict is not None and key in kvdict:
-        return kvdict[key]
-
+    
     import argparse
     pa = argparse.ArgumentParser(allow_abbrev=False)
     pa.add_argument('--{}'.format(key), type=type(default) if key_type is None else key_type, default=default)

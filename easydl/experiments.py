@@ -149,7 +149,7 @@ class WandbLogger(MetricLogger):
 
 
 def get_wandb_key(arg_name='wandb_key'):
-    wandb_key = get_config_from_cmd(arg_name, None, key_type=str)
+    wandb_key = get_config_from_cmd(arg_name, None, value_type=str)
     if wandb_key is not None:
         return wandb_key
 
@@ -191,12 +191,12 @@ class WandbExperiment:
         """
         working_dir = run_cfg.wandb_dir
         os.makedirs(working_dir, exist_ok=True)
-
+        tags = run_cfg.tags
         key = get_wandb_key()
         if key is None:
             raise RuntimeError('cannot find wandb key, Api key should be stored in ~/wandb_key.txt, or set by --wandb_key')
         self.metric_logger = WandbLogger(project=run_cfg.project_name, api_key=key,
-                                         tags=run_cfg.tags,
+                                         tags=tags,
                                          working_dir=working_dir)
 
 

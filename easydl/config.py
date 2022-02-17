@@ -46,7 +46,7 @@ class RuntimeConfig(ConfigBase):
 
         self.project_name = kwargs.get('project_name', 'debug')
         self.wandb_dir = kwargs.get('wandb_dir', '~/wandb-exp')
-        self.tags = kwargs.get('tags', '')
+        self.tags = kwargs.get('tags', list())
 
 
 class TrainingConfig(ConfigBase):
@@ -70,19 +70,19 @@ class TrainingConfig(ConfigBase):
         self.train_epoch = train_epoch
 
 
-def get_config_from_cmd(key, default=None, key_type=None, convert_to_list=False, do_expand_path=False):
+def get_config_from_cmd(key, default=None, value_type=None, convert_to_list=False, do_expand_path=False):
     """
     It will return default value or value in the argument commend
     if default is None, key_type should be given
     expand_path: True/False, if it is true, then call expand_path
     """
-    
+
     import argparse
     pa = argparse.ArgumentParser(allow_abbrev=False)
-    pa.add_argument('--{}'.format(key), type=type(default) if key_type is None else key_type, default=default)
+    pa.add_argument('--{}'.format(key), type=value_type, default=default)
     args = pa.parse_known_args()[0]
     value = args.__dict__[key]
-    if convert_to_list:
+    if convert_to_list or type(default) == list:
         value = value.split(',') if len(value) > 0 else []
     if type(value) == str and do_expand_path:
         return expand_path(value)

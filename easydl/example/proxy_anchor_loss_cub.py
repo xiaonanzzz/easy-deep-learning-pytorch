@@ -33,7 +33,7 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
 
     # prepare experiments
     cub_exp = CubMetricLearningExperiment()
-    wandb_exp = WandbExperiment('cub-metric-learning', working_dir=run_cfg.wandb_dir, tags=['debug'])
+    wandb_exp = WandbExperiment(run_cfg)
     model = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=False, bn_freeze=False)
     metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())

@@ -27,7 +27,7 @@ def get_cifar_image_transformer():
 def train_cifar():
     # get configurations from cmd
     project_name = get_config_from_cmd('project_name', 'cifar_10')
-    wandb_key = get_config_from_cmd('wandb_key', None, key_type=str)
+    wandb_key = get_config_from_cmd('wandb_key', None, value_type=str)
     data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
     model_name = get_config_from_cmd('model', 'resnet18-si')
 

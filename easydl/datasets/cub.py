@@ -69,6 +69,9 @@ class Cub2011MetricLearningDS:
 
         print('cub 2011 metric learning dataset datasets size', split, self.data.shape)
 
+    def change_image_transform(self, image_transform):
+        self.dataset.transform = image_transform
+
     def __len__(self):
         return len(self.dataset)
 
@@ -79,14 +82,14 @@ class Cub2011MetricLearningDS:
 class CubMetricLearningExperiment:
     def __init__(self):
         self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011', do_expand_path=True)
-        self.testds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=_default_image_transformer)
-        self.trainds = Cub2011MetricLearningDS(self.data_path, image_transform=_default_image_transformer)
+        self.train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=None)
+        self.test_ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=None)
         self.k_list = _metric_learning_evaluation_k_list
         self.train_classes = 100
 
     def evaluate_model(self, model):
         model.eval()
-        recall_at_k = recall_in_k_self_retrieval(model, self.testds, self.k_list)
+        recall_at_k = recall_in_k_self_retrieval(model, self.test_ds, self.k_list)
         print(recall_at_k)
         return recall_at_k
 

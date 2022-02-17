@@ -2,10 +2,9 @@ from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor, Normalize, Compose
 from torchvision import transforms
 import easydl
-from easydl.config import TrainingConfig, RuntimeConfig
+from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd, update_configs_from_cmd
 from easydl.simple_net import SimpleNet, SimpleNetV2
 from easydl.image_classification import train_image_classification_model_2021_nov
-from easydl.common import get_config_from_cmd, update_configs_from_cmd
 from easydl.experiments import prepare_logger
 
 

@@ -1,11 +1,11 @@
 import torchvision
 import os
 import pandas as pd
-from easydl.datasets import ImageDataset
+from easydl.datasets.image_dataset import ImageDataset
 import numpy as np
 from torchvision.transforms import ToTensor, Resize, Normalize
 from easydl.metrics import recall_in_k_self_retrieval
-from easydl.common import expand_path
+from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd
 
 _default_image_transformer = torchvision.transforms.Compose([
     Resize((224, 224)),
@@ -14,7 +14,6 @@ _default_image_transformer = torchvision.transforms.Compose([
 ])
 
 _metric_learning_evaluation_k_list = [1, 2, 4, 8]
-
 
 
 class CUBirdsHelper(object):
@@ -77,25 +76,21 @@ class Cub2011MetricLearningDS:
         return self.dataset[idx]
 
 
-class CubMetricLearningExperiment():
-    def __init__(self, data_path):
-        self.data_path = expand_path(data_path)
+class CubMetricLearningExperiment:
+    def __init__(self):
+        self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011', do_expand_path=True)
         self.testds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=_default_image_transformer)
         self.trainds = Cub2011MetricLearningDS(self.data_path, image_transform=_default_image_transformer)
         self.k_list = _metric_learning_evaluation_k_list
+        self.train_classes = 100
 
     def evaluate_model(self, model):
         model.eval()
         recall_at_k = recall_in_k_self_retrieval(model, self.testds, self.k_list)
         print(recall_at_k)
+        return recall_at_k
 
-
-def _test_cub_experiment():
-    from easydl.simple_net import SimpleNetEmbedder
-    exp = CubMetricLearningExperiment('~/data/CUB_200_2011')
-    model = SimpleNetEmbedder()
-    exp.evaluate_model(model)
 
 if __name__ == '__main__':
-    _test_cub_experiment()
 
+    pass

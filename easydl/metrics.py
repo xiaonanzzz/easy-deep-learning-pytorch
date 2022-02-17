@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
-from easydl.utils import batch_process_x_y_dataset_and_concat
+from easydl.batch_processing import batch_process_x_y_dataset_and_concat
 
 class RetrivalMetricsBase(object):
 

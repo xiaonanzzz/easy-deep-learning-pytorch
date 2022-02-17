@@ -3,18 +3,8 @@ import os
 import random
 import time
 
-import sklearn.preprocessing
 import torch
-import easydl
 import numpy as np
-
-class LossAverage(object):
-
-    def __init__(self):
-        self.losses = []
-
-    def append(self, loss):
-        self.losses.append(loss)
 
 
 class TrainAccuracyAverage():
@@ -104,41 +94,6 @@ def l2_norm(input):
     _output = torch.div(input, norm.view(-1, 1).expand_as(input))
     output = _output.view(input_size)
     return output
-
-
-def get_config_from_cmd(key, default=None, key_type=None, kvdict=None, convert_to_list=False):
-    """
-    It will return default value or value in the argument commend
-    if default is None, key_type should be given
-    """
-    if kvdict is not None and key in kvdict:
-        return kvdict[key]
-
-    import argparse
-    pa = argparse.ArgumentParser(allow_abbrev=False)
-    pa.add_argument('--{}'.format(key), type=type(default) if key_type is None else key_type, default=default)
-    args = pa.parse_known_args()[0]
-    value = args.__dict__[key]
-    if convert_to_list:
-        value = value.split(',') if len(value) > 0 else []
-    return value
-
-
-def update_configs_from_cmd(config_dict, prefix=''):
-    """
-    config_dict: {key: value} | object (__dict__ will be used)
-    prefix: str, it's used to concat the key from arguments, for de-duplicating purpose. e.g., the original key is 'lr'
-            and the prefix is 'train-', the key used in args should be 'train-lr'.
-
-    """
-    if isinstance(config_dict, dict):
-        config_dict = config_dict
-    else:
-        config_dict = config_dict.__dict__
-
-    for key, value in config_dict.items():
-        value1 = get_config_from_cmd('{}{}'.format(prefix, key), default=value)
-        config_dict[key] = value1
 
 
 class StringTextfileSaver():

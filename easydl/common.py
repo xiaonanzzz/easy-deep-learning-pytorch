@@ -7,41 +7,6 @@ import torch
 import numpy as np
 
 
-class TrainAccuracyAverage():
-    def __init__(self):
-        self.prediction = []
-        self.truth = []
-        self.scores = []
-
-    def update(self, pred, truth):
-        """
-        pred: torch.Tensor N*M, N*1, N,
-        truth: torch.Tensor  N
-        """
-        truth = to_numpy(truth)
-        assert truth.ndim == 1
-        pred = np.squeeze(to_numpy(pred))
-        assert pred.ndim == 2 or pred.ndim == 1
-        self.truth.extend(truth)
-        if pred.ndim == 2:
-            pred = pred.argmax(axis=1)
-        self.prediction.extend(pred)
-
-    def accuracy(self):
-        pred = np.array(self.prediction)
-        truth = np.array(self.truth)
-        return (pred == truth).mean()
-
-
-class ModelSaveEpochHook:
-    def __init__(self, model, filepath):
-        self.model = model
-        self.filepath = filepath
-
-    def __call__(self, *args, **kwargs):
-        save_model(self.model, self.filepath)
-
-
 def to_numpy(x):
     if isinstance(x, torch.Tensor):
         return x.data.cpu().numpy()
@@ -96,31 +61,6 @@ def l2_norm(input):
     return output
 
 
-class StringTextfileSaver():
-    def __init__(self, filepath):
-        self.filepath = filepath
-
-    def save(self, obj):
-        with open(self.filepath, 'w') as f:
-            f.write(str(obj))
-
-
-class ModelSaver():
-    def __init__(self, filepath):
-        self.filepath = filepath
-
-    def save(self, model):
-        torch.save(model.state_dict(), self.filepath)
-
-
-class ModelLoader():
-    def __init__(self, filepath):
-        self.filepath = filepath
-
-    def load(self, model):
-        model.load_state_dict(torch.load(self.filepath))
-
-
 class TimerContext(object):
     def __init__(self, print=True, name='<not named>'):
         self.start = 0
@@ -139,3 +79,8 @@ class TimerContext(object):
         self.end = time.time()
         if self.print_time_use:
             print('time used by [{}] [{}]'.format(self.timer_name, self.timespan))
+
+
+def profile_parameters(params):
+    for param in params:
+        yield {'size': param.size(), 'require_grad': param.data.requires_grad}

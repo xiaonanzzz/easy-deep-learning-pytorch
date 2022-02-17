@@ -15,6 +15,9 @@ class ConfigBase(object):
     def __init__(self, *args, **kwargs):
         super(ConfigBase, self).__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return str(self.__dict__)
+
     def dict(self):
         return self.__dict__.copy()
 
@@ -42,6 +45,8 @@ class RuntimeConfig(ConfigBase):
         self.project_name = 'debug'
         self.wandb_dir = '~/wandb-exp'
         self.tags = []
+
+        self.print_verbose = 1  # level of print out, 0, 1, 2. by default print level 1, but not level 2 above
 
         self.from_dict(kwargs)
 

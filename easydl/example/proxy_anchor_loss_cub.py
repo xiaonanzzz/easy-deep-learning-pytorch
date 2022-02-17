@@ -60,9 +60,16 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
 
     # run experiment
     train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, cub_exp.train_ds, cub_exp.train_classes,
-                                                    metric_logger, train_cfg, run_cfg, algo_cfg, epoch_end_hook=epoch_end)
+                                                    metric_logger, train_cfg, run_cfg, algo_cfg,
+                                                                    epoch_end_hook=epoch_end,
+                                                                    freezing_params_during_warmup=model.get_pretrained_parameters())
 
 
 if __name__ == '__main__':
+    """
+    export PYTHONPATH=$HOME/efs/easy-deep-learning-pytorch
+
+    python3 -m easydl.example.proxy_anchor_loss_cub --project_name cub-dml
+    """
     resnet50_example_no_pretrain_proxy_anchor_loss_paper()
 

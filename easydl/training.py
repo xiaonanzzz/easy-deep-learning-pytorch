@@ -1,6 +1,10 @@
+import tqdm
+
+from easydl import to_numpy
 from easydl.config import TrainingConfig, RuntimeConfig
 import torch
 import numpy as np
+import easydl
 
 
 class LossAverage(object):
@@ -29,8 +33,52 @@ def forward_backward_one_step(model, criterion, x, y, opt, train_cfg:TrainingCon
     torch.nn.utils.clip_grad_value_(model.parameters(), train_cfg.clip_gradient)
     torch.nn.utils.clip_grad_value_(criterion.parameters(), train_cfg.clip_gradient)
 
+    # must do step
     opt.step()
 
     if 'output' in store:
         store['output'] = o
     return loss
+
+
+def on_epoch_end(opt: torch.optim.Optimizer, scheduler: torch.optim.lr_scheduler._LRScheduler, run_cfg: RuntimeConfig,
+                 metric_logger: easydl.MetricLogger, loss_avg=None, pbar=None):
+    if run_cfg.print_verbose > 0:
+        print('last learning rate', scheduler.get_last_lr())
+
+    if pbar is not None:
+        pbar.close()
+
+    if loss_avg:
+        metric_logger.log({'training_loss': loss_avg.mean()})
+    for idx, lr in enumerate(scheduler.get_last_lr()):
+        metric_logger.log({'last_lr_{}'.format(idx): float(lr)})
+
+    # perform must do actions
+    scheduler.step()
+
+
+class TrainAccuracyAverage():
+    def __init__(self):
+        self.prediction = []
+        self.truth = []
+        self.scores = []
+
+    def update(self, pred, truth):
+        """
+        pred: torch.Tensor N*M, N*1, N,
+        truth: torch.Tensor  N
+        """
+        truth = to_numpy(truth)
+        assert truth.ndim == 1
+        pred = np.squeeze(to_numpy(pred))
+        assert pred.ndim == 2 or pred.ndim == 1
+        self.truth.extend(truth)
+        if pred.ndim == 2:
+            pred = pred.argmax(axis=1)
+        self.prediction.extend(pred)
+
+    def accuracy(self):
+        pred = np.array(self.prediction)
+        truth = np.array(self.truth)
+        return (pred == truth).mean()

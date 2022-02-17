@@ -21,12 +21,9 @@ class Resnet50PALVersion(nn.Module):
         self.model.embedding = nn.Linear(self.num_ftrs, self.embedding_size)
         self._initialize_weights()
 
-        if bn_freeze:
-            for m in self.model.modules():
-                if isinstance(m, nn.BatchNorm2d):
-                    m.eval()
-                    m.weight.requires_grad_(False)
-                    m.bias.requires_grad_(False)
+        self.bn_freeze = bn_freeze
+        self.pretrained = pretrained
+
 
     def l2_norm(self, input):
         input_size = input.size()
@@ -63,6 +60,21 @@ class Resnet50PALVersion(nn.Module):
 
         return x
 
+    def train(self, mode: bool = True):
+        super(Resnet50PALVersion, self).train(mode=mode)
+
+        # if bn_freeze and training mode, override the bn mode.
+        if self.bn_freeze and mode:
+            for m in self.model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eval()
+                    m.weight.requires_grad_(False)
+                    m.bias.requires_grad_(False)
+
+
     def _initialize_weights(self):
         init.kaiming_normal_(self.model.embedding.weight, mode='fan_out')
         init.constant_(self.model.embedding.bias, 0)
+
+    def get_pretrained_parameters(self):
+        return list(set(self.parameters()) - set(self.model.embedding.parameters()))

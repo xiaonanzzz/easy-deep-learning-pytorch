@@ -57,9 +57,12 @@ def train_embedding_model_with_proxy_anchor_loss_v2(model, train_ds, nb_classes,
 def train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, train_ds, nb_classes, metric_logger,
                                                     train_cfg: TrainingConfig, run_cfg: RuntimeConfig,
                                                     loss_cfg: ProxyAnchorLossConfig,
-                                                    epoch_end_hook=None):
+                                                    epoch_end_hook=None, freezing_params_during_warmup=None):
 
     criterion = ProxyAnchorLoss(nb_classes=nb_classes, sz_embed=loss_cfg.embedding_size, mrg=loss_cfg.margin, alpha=loss_cfg.alpha)
+
+    if freezing_params_during_warmup is None:
+        freezing_params_during_warmup = model.parameters()
 
     param_groups = [{'params': model.parameters(), 'lr': float(train_cfg.lr) * 1},
                     {'params': criterion.proxies, 'lr': float(train_cfg.lr) * loss_cfg.proxy_lr_scale}]
@@ -71,7 +74,7 @@ def train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, train
     for epoch in range(1, train_cfg.train_epoch + 1):
         loss_avg = LossAverage()
 
-        for param in criterion.parameters():
+        for param in freezing_params_during_warmup:
             param.requires_grad = epoch > train_cfg.warmup_epoch
 
         pbar = tqdm(enumerate(dl_tr), total=len(dl_tr), disable=run_cfg.tqdm_disable)

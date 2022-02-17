@@ -32,42 +32,42 @@ def merging_configs(*configs: [ConfigBase]):
         cfg.from_dict(c.dict())
     return cfg
 
-
 class RuntimeConfig(ConfigBase):
-    def __init__(self, *args, device=None, cpu_workers=2, tqdm_disable=False, infer_batch_size=32, model_dir=None, **kwargs):
-        super(RuntimeConfig, self).__init__(*args, **kwargs)
-        self.device = device
+    def __init__(self, *args, **kwargs):
+        self.device = None
         if self.device is None:
             self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.cpu_workers = cpu_workers
-        self.tqdm_disable = tqdm_disable
-        self.infer_batch_size = infer_batch_size
-        self.model_dir = model_dir
+        self.cpu_workers = 4
+        self.tqdm_disable = 0
+        self.infer_batch_size = 128
+        self.model_dir = ''
+        self.project_name = 'debug'
+        self.wandb_dir = '~/wandb-exp'
+        self.tags = []
 
-        self.project_name = kwargs.get('project_name', 'debug')
-        self.wandb_dir = kwargs.get('wandb_dir', '~/wandb-exp')
-        self.tags = kwargs.get('tags', list())
+        self.from_dict(kwargs)
 
 
 class TrainingConfig(ConfigBase):
-    def __init__(self, *args, optimizer='sgd', lr=0.1, weight_decay=1e-4, momentum=0.9,
-                 lr_scheduler_type='step', lr_decay_step=10, lr_decay_gamma=0.5,
-                 train_batch_size=30, train_epoch=30,  nesterov=False, **kwargs):
-        super(TrainingConfig, self).__init__(*args, **kwargs)
-        self.optimizer = optimizer
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.momentum = momentum
-        self.nesterov = nesterov
+    def __init__(self, *args, **kwargs):
+        self.optimizer = 'sgd'  # [adamw, adam, rmsprop]
+        self.lr = 1e-4
+        self.weight_decay = 1e-4
+        self.momentum = 0.9
+        self.nesterov = False
         self.clip_gradient = 10
 
-        self.lr_scheduler_type = lr_scheduler_type
-        self.lr_decay_step = lr_decay_step
-        self.lr_decay_gamma = lr_decay_gamma
+        self.warmup_epoch = 1
+        self.lr_scheduler_type = 'step' # cosine
+        self.lr_decay_step = 10
+        self.lr_decay_gamma = 0.5
 
         # datasets related configurations
-        self.train_batch_size = train_batch_size
-        self.train_epoch = train_epoch
+        self.train_batch_size = 128
+        self.train_epoch = 30
+
+        # read from kwargs
+        self.from_dict(kwargs)
 
 
 def get_config_from_cmd(key, default=None, value_type=None, convert_to_list=False, do_expand_path=False):

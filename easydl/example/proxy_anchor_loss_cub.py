@@ -1,5 +1,5 @@
 from easydl.datasets.cub import CubMetricLearningExperiment
-from easydl.metric_learning import ProxyAnchorLossConfig, train_embedding_model_with_proxy_anchor_loss_v2
+from easydl.metric_learning import ProxyAnchorLossConfig, train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze
 from easydl.config import TrainingConfig, RuntimeConfig
 from easydl.experiments import WandbExperiment
 
@@ -23,9 +23,10 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
     import os
     from easydl.cnn_embedder import Resnet50PALVersion
     # prepare configurations
-    train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-4, momentum=0.9,
-              lr_scheduler_type='cosine', train_batch_size=120, train_epoch=50, nesterov=False)
+    train_cfg = TrainingConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
+                               lr_decay_step=5, train_batch_size=120, train_epoch=60)
     train_cfg.update_values_from_cmd()
+
     run_cfg = RuntimeConfig()
     run_cfg.update_values_from_cmd()
     algo_cfg = ProxyAnchorLossConfig()
@@ -37,6 +38,7 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
     cub_exp = CubMetricLearningExperiment()
     wandb_exp = WandbExperiment(run_cfg)
     model = Resnet50PALVersion(algo_cfg.embedding_size, **model_cfg)
+
     metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
@@ -48,7 +50,7 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
         metric_logger.log({'recall@{}'.format(k): v for k, v in recall_at_k.items()})
 
     # run experiment
-    train_embedding_model_with_proxy_anchor_loss_v2(model, cub_exp.trainds, cub_exp.train_classes,
+    train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, cub_exp.trainds, cub_exp.train_classes,
                                                     metric_logger, train_cfg, run_cfg, algo_cfg, epoch_end_hook=epoch_end)
 
 

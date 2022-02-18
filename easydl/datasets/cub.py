@@ -3,15 +3,9 @@ import os
 import pandas as pd
 from easydl.datasets.image_dataset import ImageDataset
 import numpy as np
-from torchvision.transforms import ToTensor, Resize, Normalize
+from easydl.image_transform import resnet_transform_train, resnet_transform_test
 from easydl.metrics import recall_in_k_self_retrieval
 from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd
-
-_default_image_transformer = torchvision.transforms.Compose([
-    Resize((224, 224)),
-    ToTensor(),
-    Normalize(0.45, 0.22),      # simple version from https://pytorch.org/vision/stable/models.html
-])
 
 _metric_learning_evaluation_k_list = [1, 2, 4, 8]
 
@@ -82,8 +76,8 @@ class Cub2011MetricLearningDS:
 class CubMetricLearningExperiment:
     def __init__(self):
         self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011')
-        self.train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=None)
-        self.test_ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=None)
+        self.train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=resnet_transform_train)
+        self.test_ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=resnet_transform_test)
         self.k_list = _metric_learning_evaluation_k_list
         self.train_classes = 100
 

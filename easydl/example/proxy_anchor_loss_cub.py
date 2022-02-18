@@ -11,7 +11,7 @@ class ModelConfig(ConfigBase):
         self.pretrained = True
         self.bn_freeze = True
 
-def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
+def proxy_anchor_loss_paper():
     """
     reproducing the result from https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
     python train.py --gpu-id 0 \
@@ -63,15 +63,15 @@ def resnet50_example_no_pretrain_proxy_anchor_loss_paper():
                                                                     epoch_end_hook=epoch_end,
                                                                     freezing_params_during_warmup=model.get_pretrained_parameters())
 
-def train_simple_net_v1():
+def resnet_50_from_scratch():
     # prepare configurations
-    train_cfg = TrainingConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
-                               lr_decay_step=5, train_batch_size=120, train_epoch=60)
+    train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
+                               lr_decay_step=10, train_batch_size=120, train_epoch=60)
     train_cfg.update_values_from_cmd()
 
     run_cfg = RuntimeConfig()
     run_cfg.update_values_from_cmd()
-    run_cfg.tags.append('train_simple_net_v1')
+    run_cfg.tags.append('resnet_50_from_scratch')
 
     algo_cfg = ProxyAnchorLossConfig()
     algo_cfg.update_values_from_cmd()
@@ -80,7 +80,7 @@ def train_simple_net_v1():
     cub_exp = CubMetricLearningExperiment()
     wandb_exp = WandbExperiment(run_cfg)
 
-    model = SimpleNetEmbedder(embedding_size=algo_cfg.embedding_size)
+    model = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=False, bn_freeze=False)
 
     cub_exp.train_ds.change_image_transform(resnet_transform_train)
     cub_exp.test_ds.change_image_transform(resnet_transform_test)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     python3 -m easydl.example.proxy_anchor_loss_cub --project_name cub-dml
     """
-    func_name = get_config_from_cmd('func', 'train_simple_net_v1')
+    func_name = get_config_from_cmd('func', 'resnet_50_from_scratch')
     print('executing function ...', func_name)
     globals()[func_name]()
 

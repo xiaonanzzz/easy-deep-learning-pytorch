@@ -1,5 +1,6 @@
-__version__ = "2.11"
+__version__ = "2.12"
 
+# 2.12 change cub default transform, train resnet from scratch on CUB metric learning
 # 2.11 code refactoring
 # 2.10 add l2_norm in simple net embedder
 # 2.9 change freezing config and logic, train simple net on CUB

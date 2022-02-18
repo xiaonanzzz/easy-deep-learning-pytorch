@@ -1,7 +1,27 @@
 import torch
 from torch import nn
-from easydl.models import L2Normalization
+from torch.nn.functional import normalize
 
+
+class L2Normalization(torch.nn.Module):
+    def __init__(self, dim=1):
+        self.dim = dim
+
+    def forward(self, x):
+        return normalize(x, p=2, dim=self.dim)
+
+
+class LinearClassifier(torch.nn.Module):
+    def __init__(self, in_features, num_classes):
+        super(LinearClassifier, self).__init__()
+        self.fc = nn.Linear(in_features, num_classes)
+
+    def forward(self, x):
+        x = self.fc(x)
+        if self.training:
+            return x
+        else:
+            return torch.argmax(x, dim=1)
 
 
 class MLPEmbedder(nn.Module):
@@ -39,16 +59,17 @@ class LinearEmbedder(torch.nn.Module):
 
     def forward(self, x):
         o = self.fc(x)
-        o = self.l2_norm(o)
+        o = normalize(o)
         return o
 
-    def l2_norm(self,input):
-        input_size = input.size()
-        buffer = torch.pow(input, 2)
 
-        normp = torch.sum(buffer, 1).add_(1e-12)
-        norm = torch.sqrt(normp)
+class EmbedderClassifier(nn.Module):
+    def __init__(self, embedder, embedding_size, num_classes):
+        super(EmbedderClassifier, self).__init__()
+        self.embedder = embedder
+        self.classifier = LinearClassifier(embedding_size, num_classes)
 
-        _output = torch.div(input, norm.view(-1, 1).expand_as(input))
-        output = _output.view(input_size)
-        return output
+    def forward(self, x):
+        x = self.embedder(x)
+        x = self.classifier(x)
+        return x

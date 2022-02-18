@@ -2,7 +2,7 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-from easydl import l2_norm, binarize
+from easydl import binarize
 
 
 class ProxyAnchorLoss(torch.nn.Module):
@@ -20,7 +20,7 @@ class ProxyAnchorLoss(torch.nn.Module):
     def forward(self, X, T):
         P = self.proxies
 
-        cos = F.linear(l2_norm(X), l2_norm(P))  # Calcluate cosine similarity
+        cos = F.linear(F.normalize(X), F.normalize(P))  # Calcluate cosine similarity
         P_one_hot = binarize(T=T, nb_classes=self.nb_classes)
         N_one_hot = 1 - P_one_hot
 

@@ -3,7 +3,9 @@ from easydl.metric_learning import ProxyAnchorLossConfig, train_embedding_model_
 from easydl.config import TrainingConfig, RuntimeConfig, ConfigBase, get_config_from_cmd
 from easydl.experiments import WandbExperiment
 from easydl.image_transform import resnet_transform_train, resnet_transform_test
-from easydl.image_model import Resnet50PALVersion, SimpleNetEmbedder
+from easydl.image_model import Resnet50PALVersion
+from easydl.mlp_model import EmbedderClassifier
+from easydl.image_classification import train_image_classification_model_2021_nov
 
 
 class ModelConfig(ConfigBase):
@@ -98,6 +100,45 @@ def resnet_50_from_scratch():
     train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, cub_exp.train_ds, cub_exp.train_classes,
                                                     metric_logger, train_cfg, run_cfg, algo_cfg, epoch_end_hook=epoch_end,
                                                                     freezing_params_during_warmup=None)
+
+def resnet_50_classification_loss():
+    # prepare configurations
+    train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
+                               lr_decay_step=10, train_batch_size=120, train_epoch=60)
+    train_cfg.update_values_from_cmd()
+
+    run_cfg = RuntimeConfig()
+    run_cfg.update_values_from_cmd()
+    run_cfg.tags.append('resnet_50_from_scratch')
+
+    algo_cfg = ProxyAnchorLossConfig()
+    algo_cfg.update_values_from_cmd()
+
+    # prepare experiments
+    cub_exp = CubMetricLearningExperiment()
+    wandb_exp = WandbExperiment(run_cfg)
+
+    embedder = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=False, is_norm=False, bn_freeze=False)
+    embedder_classifier = EmbedderClassifier(embedder, algo_cfg.embedding_size, cub_exp.train_classes)
+
+    cub_exp.train_ds.change_image_transform(resnet_transform_train)
+    cub_exp.test_ds.change_image_transform(resnet_transform_test)
+
+    metric_logger = wandb_exp.metric_logger
+    metric_logger.update_config(train_cfg.dict())
+    metric_logger.update_config(algo_cfg.dict())
+
+    def epoch_end(**kwargs):
+        print('evaluting the model on testing data...')
+        embedder.is_norm = True
+        recall_at_k = cub_exp.evaluate_model(embedder)
+        embedder.is_norm = False
+        metric_logger.log({'recall@{}'.format(k): v for k, v in recall_at_k.items()})
+
+    # run experiment
+    train_image_classification_model_2021_nov(
+        embedder_classifier, cub_exp.train_ds, train_cfg, run_cfg, metric_logger,
+        epoch_end_hook=epoch_end)
 
 
 if __name__ == '__main__':

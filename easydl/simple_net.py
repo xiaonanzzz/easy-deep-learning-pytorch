@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional
+from easydl.linear import LinearEmbedder
 
 class SimpleConvLayersV1(nn.Module):
     def __init__(self, input_channels, output_channels, channels=64, kernel_size=5, downsample_size=2,
@@ -55,7 +56,7 @@ class SimpleNetEmbedder(nn.Module):
         super(SimpleNetEmbedder, self).__init__()
         padding = kernel_size // 2
         self.channels = channels
-        self.pooling = nn.AdaptiveAvgPool2d((1, 1))
+        self.pooling = nn.AdaptiveAvgPool2d(1)
         self.features = nn.Sequential(
             nn.Conv2d(3, self.channels, kernel_size=kernel_size, padding=padding),
             nn.ReLU(inplace=True),
@@ -63,7 +64,7 @@ class SimpleNetEmbedder(nn.Module):
             nn.Conv2d(self.channels, self.channels, kernel_size=kernel_size, padding=padding),
             nn.ReLU(inplace=True),
         )
-        self.embedder = nn.Linear(self.channels, embedding_size)
+        self.embedder = LinearEmbedder(channels, embedding_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)

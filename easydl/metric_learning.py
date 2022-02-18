@@ -24,13 +24,18 @@ def train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, train
                                                     train_cfg: TrainingConfig, run_cfg: RuntimeConfig,
                                                     loss_cfg: ProxyAnchorLossConfig,
                                                     epoch_end_hook=None, freezing_params_during_warmup=None):
+    """
+    freezing_params_during_warmup:  None: no freezing, "model": freezing all model parameters, list(params): freezing the given list of params
+    """
     print('configurations', train_cfg, loss_cfg)
     criterion = ProxyAnchorLoss(nb_classes=nb_classes, sz_embed=loss_cfg.embedding_size, mrg=loss_cfg.margin, alpha=loss_cfg.alpha)
 
     if freezing_params_during_warmup is None:
+        print('not freezing anything...')
+        freezing_params_during_warmup = list()
+    elif freezing_params_during_warmup == 'model':
         freezing_params_during_warmup = list(model.parameters())
         print('freezing all model parameters for warmup ...', len(freezing_params_during_warmup))
-
     else:
         print('freezing given model parameters, total: ', len(freezing_params_during_warmup))
 

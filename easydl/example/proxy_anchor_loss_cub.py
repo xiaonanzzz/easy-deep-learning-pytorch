@@ -3,8 +3,7 @@ from easydl.metric_learning import ProxyAnchorLossConfig, train_embedding_model_
 from easydl.config import TrainingConfig, RuntimeConfig, ConfigBase, get_config_from_cmd
 from easydl.experiments import WandbExperiment
 from easydl.image_transform import resnet_transform_train, resnet_transform_test
-from easydl.simple_net import SimpleNetEmbedder
-from easydl.cnn_embedder import Resnet50PALVersion
+from easydl.image_model import Resnet50PALVersion, SimpleNetEmbedder
 
 
 class ModelConfig(ConfigBase):

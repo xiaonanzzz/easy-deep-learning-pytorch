@@ -5,9 +5,7 @@ from tqdm import tqdm
 from easydl.config import RuntimeConfig
 from easydl.config import TrainingConfig
 from easydl.experiments import MetricLogger
-from easydl.lr_scheduler import prepare_lr_scheduler
-from easydl.optimizer import prepare_optimizer
-from easydl.training import TrainAccuracyAverage
+from easydl.training_common import TrainAccuracyAverage, prepare_optimizer, prepare_lr_scheduler
 from easydl.batch_processing import batch_process_x_y_dataset_and_concat
 
 def evaluate_classification_model(model, test_dataset, runcfg:RuntimeConfig, **kwargs):

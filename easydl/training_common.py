@@ -82,3 +82,29 @@ class TrainAccuracyAverage():
         pred = np.array(self.prediction)
         truth = np.array(self.truth)
         return (pred == truth).mean()
+
+
+def prepare_optimizer(args: TrainingConfig, param_groups):
+    if args.optimizer == 'sgd':
+        opt = torch.optim.SGD(param_groups, lr=float(args.lr), weight_decay=args.weight_decay, momentum=args.momentum,
+                              nesterov=args.nesterov)
+    elif args.optimizer == 'adam':
+        opt = torch.optim.Adam(param_groups, lr=float(args.lr), weight_decay=args.weight_decay)
+    elif args.optimizer == 'rmsprop':
+        opt = torch.optim.RMSprop(param_groups, lr=float(args.lr), alpha=0.9, weight_decay=args.weight_decay,
+                                  momentum=args.momentum)
+    elif args.optimizer == 'adamw':
+        opt = torch.optim.AdamW(param_groups, lr=float(args.lr), weight_decay=args.weight_decay)
+
+    return opt
+
+
+def prepare_lr_scheduler(args: TrainingConfig, opt):
+    if args.lr_scheduler_type == 'step':
+        lr = torch.optim.lr_scheduler.StepLR(opt, step_size=args.lr_decay_step, gamma=args.lr_decay_gamma)
+    elif args.lr_scheduler_type == 'cosine':
+        lr = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.train_epoch)
+    else:
+        raise NotImplementedError()
+
+    return lr

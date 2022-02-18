@@ -3,7 +3,7 @@ from torchvision.transforms import ToTensor, Normalize, Compose
 from torchvision import transforms
 import easydl
 from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd, update_configs_from_cmd
-from easydl.simple_net import SimpleNet, SimpleNetV2
+from easydl.image_model import SimpleNet, SimpleNetV2
 from easydl.image_classification import train_image_classification_model_2021_nov
 from easydl.experiments import prepare_logger
 

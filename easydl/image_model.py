@@ -1,7 +1,87 @@
 import torch
 from torch import nn
 from torch.nn import functional
-from easydl.linear import LinearEmbedder
+from torchvision.models.resnet import resnet50
+import torch.nn.init as init
+
+from easydl.mlp_model import LinearEmbedder
+
+
+class Resnet50PALVersion(nn.Module):
+    """
+    https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/net/resnet.py
+    """
+    def __init__(self, embedding_size, pretrained=True, is_norm=True, bn_freeze=True):
+        super(Resnet50PALVersion, self).__init__()
+
+        self.model = resnet50(pretrained)
+        self.is_norm = is_norm
+        self.embedding_size = embedding_size
+        self.num_ftrs = self.model.fc.in_features
+        self.model.gap = nn.AdaptiveAvgPool2d(1)
+        self.model.gmp = nn.AdaptiveMaxPool2d(1)
+
+        self.model.embedding = nn.Linear(self.num_ftrs, self.embedding_size)
+        self._initialize_weights()
+
+        self.bn_freeze = bn_freeze
+        self.pretrained = pretrained
+
+
+    def l2_norm(self, input):
+        input_size = input.size()
+        buffer = torch.pow(input, 2)
+
+        normp = torch.sum(buffer, 1).add_(1e-12)
+        norm = torch.sqrt(normp)
+
+        _output = torch.div(input, norm.view(-1, 1).expand_as(input))
+
+        output = _output.view(input_size)
+
+        return output
+
+    def forward(self, x):
+        x = self.model.conv1(x)
+        x = self.model.bn1(x)
+        x = self.model.relu(x)
+        x = self.model.maxpool(x)
+        x = self.model.layer1(x)
+        x = self.model.layer2(x)
+        x = self.model.layer3(x)
+        x = self.model.layer4(x)
+
+        avg_x = self.model.gap(x)
+        max_x = self.model.gmp(x)
+
+        x = max_x + avg_x
+        x = x.view(x.size(0), -1)
+        x = self.model.embedding(x)
+
+        if self.is_norm:
+            x = self.l2_norm(x)
+
+        return x
+
+    def train(self, mode: bool = True):
+        super(Resnet50PALVersion, self).train(mode=mode)
+
+        # if bn_freeze and training mode, override the bn mode.
+        if self.bn_freeze and mode:
+            for m in self.model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eval()
+                    m.weight.requires_grad_(False)
+                    m.bias.requires_grad_(False)
+
+
+    def _initialize_weights(self):
+        init.kaiming_normal_(self.model.embedding.weight, mode='fan_out')
+        init.constant_(self.model.embedding.bias, 0)
+
+    def get_pretrained_parameters(self):
+        return list(set(self.parameters()) - set(self.model.embedding.parameters()))
+
 
 class SimpleConvLayersV1(nn.Module):
     def __init__(self, input_channels, output_channels, channels=64, kernel_size=5, downsample_size=2,
@@ -50,6 +130,7 @@ class SimpleNet(nn.Module):
         else:
             return torch.argmax(x, dim=1)
 
+
 class SimpleNetEmbedder(nn.Module):
 
     def __init__(self, embedding_size=32, channels=64, downsample_size=2, kernel_size=5) -> None:
@@ -73,6 +154,7 @@ class SimpleNetEmbedder(nn.Module):
         x = self.embedder(x)
         return x
 
+
 class SimpleNetV2(nn.Module):
 
     def __init__(self, num_classes: int = 1000, channels=64, **kwargs) -> None:
@@ -94,6 +176,7 @@ class SimpleNetV2(nn.Module):
             return x
         else:
             return torch.argmax(x, dim=1)
+
 
 def get_model_by_name(name):
     return globals()[name]

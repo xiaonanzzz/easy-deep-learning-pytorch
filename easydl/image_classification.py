@@ -10,8 +10,7 @@ from easydl.batch_processing import batch_process_x_y_dataset_and_concat
 
 def evaluate_classification_model(model, test_dataset, runcfg:RuntimeConfig, **kwargs):
     ypred, ytrue = batch_process_x_y_dataset_and_concat(test_dataset, model, batch_size=runcfg.infer_batch_size,
-                                       save_index=1, device=runcfg.device,
-                                                   tqdm_disable=False, tqdm_description='evaluation', **kwargs)
+                                       save_index=1, tqdm_disable=False, tqdm_description='evaluation', **kwargs)
     assert ypred.shape[0] == ytrue.shape[0]
     if len(ypred.shape) == 2:
         ypred = torch.argmax(ypred, dim=1)

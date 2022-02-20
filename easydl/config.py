@@ -44,6 +44,7 @@ class RuntimeConfig(ConfigBase):
         self.model_dir = ''
         self.project_name = 'debug'
         self.wandb_dir = '~/wandb-exp'
+        self.pytorch_data = '~/pytorch_data'
         self.tags = []
 
         self.print_verbose = 1  # level of print out, 0, 1, 2. by default print level 1, but not level 2 above

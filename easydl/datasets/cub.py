@@ -87,7 +87,3 @@ class CubMetricLearningExperiment:
         print(recall_at_k)
         return recall_at_k
 
-
-if __name__ == '__main__':
-
-    pass

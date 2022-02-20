@@ -5,7 +5,7 @@ import numpy as np
 
 def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_index=1, out_device=torch.device('cpu'),
                              tqdm_disable=True,
-                             tqdm_description=''):
+                             tqdm_description='', **kwargs):
     """
 
     :param dataset:         a pytorch dataset class, e.g. ds[index] -> x0, x1, x2, ...

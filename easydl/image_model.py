@@ -7,6 +7,16 @@ import torch.nn.init as init
 from easydl.mlp_model import LinearEmbedder
 
 
+def get_pytorch_model(name, num_classes, pretrained=True):
+    from torchvision.models import resnet50
+    if name == 'resnet50':
+        model = resnet50(pretrained=pretrained)
+        input_features = model.fc.in_features
+        model.fc = nn.Linear(input_features, num_classes, bias=True)
+        return model
+
+
+
 class Resnet50PALVersion(nn.Module):
     """
     https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/net/resnet.py

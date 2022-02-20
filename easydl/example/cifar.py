@@ -5,7 +5,7 @@ import easydl
 from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd, update_configs_from_cmd
 from easydl.image_model import SimpleNet, SimpleNetV2
 from easydl.image_classification import train_image_classification_model_2021_nov
-from easydl.experiments import prepare_logger
+from easydl.experiments import prepare_logger, WandbExperiment
 
 
 transform_train = transforms.Compose([
@@ -26,27 +26,23 @@ def get_cifar_image_transformer():
 
 def train_cifar():
     # get configurations from cmd
-    project_name = get_config_from_cmd('project_name', 'cifar_10')
-    wandb_key = get_config_from_cmd('wandb_key', '')
-    data_dir = get_config_from_cmd('data_dir', '~/pytorch_data')
-    model_name = get_config_from_cmd('model', 'resnet18-si')
-
-    tags = get_config_from_cmd('tags', [str])
-    tags.append('ver-{}'.format(easydl.__version__))
-    tags.append(model_name)
-
     train_cfg = TrainingConfig(optimizer='sgd', lr=0.01, weight_decay=5e-4, lr_scheduler_type='cosine',
                                train_epoch=100, train_batch_size=128)
+    # adding extra training config
+    train_cfg.model_name = 'resnet18-si'
     train_cfg.update_values_from_cmd()
-    run_cfg = RuntimeConfig()
-    metric_logger = prepare_logger(wandb_key=wandb_key,
-                                   project_name=project_name,
-                                   tags=tags,  # modify this accordingly !!!
-                                   )
-    metric_logger.update_config(train_cfg.__dict__)
+    model_name = train_cfg.model_name
 
-    train_ds = CIFAR10(data_dir, train=True, download=True, transform=transform_train)
-    test_ds = CIFAR10(data_dir, train=False, download=True, transform=transform_test)
+    run_cfg = RuntimeConfig()
+    run_cfg.update_values_from_cmd()
+    run_cfg.tags.append(model_name)
+
+    # prepare experiments
+    wandb_exp = WandbExperiment(run_cfg)
+    metric_logger = wandb_exp.metric_logger
+
+    train_ds = CIFAR10(run_cfg.pytorch_data, train=True, download=True, transform=transform_train)
+    test_ds = CIFAR10(run_cfg.pytorch_data, train=False, download=True, transform=transform_test)
 
     print('train datasets shape', train_ds[0][0].shape, str(train_ds[0][0])[:50])
     print('training code version', easydl.__version__)

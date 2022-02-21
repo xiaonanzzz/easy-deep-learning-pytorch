@@ -9,6 +9,7 @@ from easydl.training_common import TrainAccuracyAverage, prepare_optimizer, prep
 from easydl.batch_processing import batch_process_x_y_dataset_and_concat
 
 def evaluate_classification_model(model, test_dataset, runcfg:RuntimeConfig, **kwargs):
+    model.eval()
     ypred, ytrue = batch_process_x_y_dataset_and_concat(test_dataset, model, batch_size=runcfg.infer_batch_size,
                                        save_index=1, tqdm_disable=False, tqdm_description='evaluation', **kwargs)
     assert ypred.shape[0] == ytrue.shape[0]
@@ -33,6 +34,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
     scheduler = prepare_lr_scheduler(train_cfg, opt)
     dl_tr = torch.utils.data.DataLoader(
         train_ds,
+        shuffle=True,
         batch_size=train_cfg.train_batch_size,
         num_workers=run_cfg.cpu_workers,
         pin_memory=True
@@ -51,6 +53,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
 
             m = model(x.to(run_cfg.device))
             loss = criterion(m, y.to(run_cfg.device))
+
             opt.zero_grad()
             loss.backward()
 
@@ -71,7 +74,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
         scheduler.step()
 
         # epoch end
-        metric_logger.log({'lr': float(scheduler.get_last_lr()[0]),
+        metric_logger.log({'last_lr': float(scheduler.get_last_lr()[0]),
                            'train_loss_mean': np.mean(losses_per_epoch),
                            'train_acc_mean': acc_avg.accuracy()
                            })

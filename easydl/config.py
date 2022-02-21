@@ -48,6 +48,7 @@ class RuntimeConfig(ConfigBase):
         self.tags = []
 
         self.print_verbose = 1  # level of print out, 0, 1, 2. by default print level 1, but not level 2 above
+        self.debug = False
 
         self.from_dict(kwargs)
 

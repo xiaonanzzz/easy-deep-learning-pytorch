@@ -34,7 +34,7 @@ def cub_image_classification_2021_nov():
     # run experiment
     train_image_classification_model_2021_nov(
         classifier, cub_exp.train_ds, train_cfg, run_cfg, metric_logger,
-        epoch_end_hook=None, eval_train_ds=True, test_ds=cub_exp.test_ds)
+        epoch_end_hook=None, eval_train_ds=False, test_ds=cub_exp.test_ds)
 
 if __name__ == '__main__':
     """

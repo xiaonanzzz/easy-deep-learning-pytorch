@@ -196,8 +196,12 @@ class WandbExperiment:
         key = get_wandb_key()
         if key is None:
             raise RuntimeError('cannot find wandb key, Api key should be stored in ~/wandb_key.txt, or set by --wandb_key')
-        self.metric_logger = WandbLogger(project=run_cfg.project_name, api_key=key,
+
+        loggers = [PrintMetricLogger()]
+        wandb_logger = WandbLogger(project=run_cfg.project_name, api_key=key,
                                          tags=tags,
                                          working_dir=working_dir)
+        loggers.append(wandb_logger)
+        self.metric_logger = MultiMetricLogger(loggers)
 
 

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from easydl.datasets.image_dataset import ImageDataset
 import numpy as np
-from easydl.image_transform import resnet_transform_train, resnet_transform_test
+from easydl.image_transform import resnet_transform_train, resnet_transform_test, make_transform_train_v1, make_transform_test_v1
 from easydl.metrics import recall_in_k_self_retrieval
 from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd
 
@@ -36,6 +36,45 @@ class CUBirdsHelper(object):
         meta_df = meta_df.merge(train_test_split, on='image_id')
         # meta df is merged datasets profile
         self.meta_df = meta_df
+
+
+class CubClassificationDS:
+    """
+    5,994 training images and 5,794 testing data
+    """
+    def __init__(self, root, split='train', image_transform=None, item_schema=('image', 'label_code'), **kwargs):
+        self.cub = CUBirdsHelper(root)
+
+        meta_df = self.cub.meta_df
+        self.split = split
+        if self.split == 'train':
+            self.data = meta_df[meta_df['is_training_img'] == 1]
+        elif self.split == 'test':
+            self.data = meta_df[meta_df['is_training_img'] == 0]
+        else:
+            raise ValueError('wrong split mode, only accept train/test')
+        self.data = self.data.reset_index(drop=True)
+
+        image_path = self.data.image_path.map(lambda x: os.path.join(self.cub.image_folder, x))
+        labels = self.data.label
+
+        self.dataset = ImageDataset(image_path, labels, transform=image_transform, item_schema=item_schema)
+
+        print('cub 2011 classification data, split:', split, 'shape:', self.data.shape)
+
+    def show_profile(self):
+        print('unique values per column\n', self.data.nunique())
+        print('head ', self.data.head())
+
+    def change_image_transform(self, image_transform):
+        self.dataset.transform = image_transform
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        return self.dataset[idx]
+
 
 
 class Cub2011MetricLearningDS:
@@ -71,6 +110,14 @@ class Cub2011MetricLearningDS:
 
     def __getitem__(self, idx):
         return self.dataset[idx]
+
+
+class CubClassificationExperiment:
+    def __init__(self, image_size):
+        self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011')
+        self.train_ds = CubClassificationDS(self.data_path, split='train', image_transform=make_transform_train_v1(image_size=image_size))
+        self.test_ds = CubClassificationDS(self.data_path, split='test', image_transform=make_transform_test_v1(image_size=image_size))
+        self.n_classes = 200
 
 
 class CubMetricLearningExperiment:

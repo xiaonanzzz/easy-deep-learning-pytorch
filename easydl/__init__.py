@@ -1,6 +1,7 @@
-__version__ = "2.14"
+__version__ = "2.15"
 
 """
+2.15 cub classification, 200 classes, 
 2.14 refactor cifar code, add cub_classification on first 100 CUB classes
 2.13 train resnet 50 model from scratch using classification loss
 2.12 change cub default transform, train resnet from scratch on CUB metric learning

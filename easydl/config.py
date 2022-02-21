@@ -53,6 +53,12 @@ class RuntimeConfig(ConfigBase):
 
 
 class TrainingConfig(ConfigBase):
+    """
+    Example
+    train_cfg = TrainConfig(optimzer = 'sgd')   # experimental default value
+    train_cfg.model_name = 'resnet'             # add new configs with a default value
+    train_cfg.update_values_from_cmd            # update configs from command line, e.g. --model_name 'alexnet'
+    """
     def __init__(self, *args, **kwargs):
         self.optimizer = 'sgd'  # [adamw, adam, rmsprop]
         self.lr = 1e-4

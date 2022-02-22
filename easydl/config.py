@@ -1,6 +1,6 @@
 import torch
 
-from easydl import expand_path
+from .common import expand_path
 
 """
 This module provides helps in defining, using and managing configurations. It serves the following purpose:
@@ -69,9 +69,10 @@ class TrainingConfig(ConfigBase):
         self.clip_gradient = 10
 
         self.warmup_epoch = 1
-        self.lr_scheduler_type = 'step' # cosine
+        self.lr_scheduler_type = 'step'     # support: ['step', 'cosine']
         self.lr_decay_step = 10
         self.lr_decay_gamma = 0.5
+        self.lr_min = 0  # minimum learning rate, used in "cosine"
 
         # datasets related configurations
         self.train_batch_size = 128
@@ -114,7 +115,7 @@ def get_config_from_cmd(key, default=None, do_not_expand_path=False):
         elif type(default) == torch.device:
             value = parse_torch_device(value)
         elif type(default) == bool:
-            if value in ['False', 'false', 0]:
+            if value in ['False', 'false', 0, '0']:
                 value = False
             else:
                 value = True

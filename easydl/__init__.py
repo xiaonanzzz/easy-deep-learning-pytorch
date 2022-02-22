@@ -1,6 +1,7 @@
-__version__ = "2.16"
+__version__ = "2.17"
 
 """
+2.17 add config of lr_min for cosine scheduler
 2.16 debuging image classification module, fixed the issue of no shuffle in training...
 2.15 cub classification, 200 classes, 
 2.14 refactor cifar code, add cub_classification on first 100 CUB classes
@@ -14,6 +15,6 @@ __version__ = "2.16"
 2.6, change get_config_from_cmd
 """
 
-
+from .config import *
 from .common import *
 from .experiments import MetricLogger

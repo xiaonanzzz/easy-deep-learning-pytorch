@@ -101,24 +101,28 @@ def resnet_50_from_scratch():
                                                     metric_logger, train_cfg, run_cfg, algo_cfg, epoch_end_hook=epoch_end,
                                                                     freezing_params_during_warmup=None)
 
-def resnet_50_classification_loss():
+def resnet_50_clf_loss_v1():
     # prepare configurations
-    train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
-                               lr_decay_step=10, train_batch_size=120, train_epoch=60)
-    train_cfg.update_values_from_cmd()
-
     run_cfg = RuntimeConfig()
     run_cfg.update_values_from_cmd()
-    run_cfg.tags.append('resnet_50_from_scratch')
+    run_cfg.tags.append('resnet_50_clf_loss_v1')
+    wandb_exp = WandbExperiment(run_cfg)
+
+    train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-5, lr_scheduler_type='cosine',
+                               train_batch_size=120, train_epoch=60)
+    train_cfg.pretrained = True
+    train_cfg.is_norm = True
+    train_cfg.bn_freeze = True
+    train_cfg.update_values_from_cmd()
 
     algo_cfg = ProxyAnchorLossConfig()
     algo_cfg.update_values_from_cmd()
 
     # prepare experiments
     cub_exp = CubMetricLearningExperiment()
-    wandb_exp = WandbExperiment(run_cfg)
 
-    embedder = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=False, is_norm=False, bn_freeze=False)
+    embedder = Resnet50PALVersion(algo_cfg.embedding_size,
+                                  pretrained=train_cfg.pretrained, is_norm=train_cfg.is_norm, bn_freeze=train_cfg.bn_freeze)
     embedder_classifier = EmbedderClassifier(embedder, algo_cfg.embedding_size, cub_exp.train_classes)
 
     cub_exp.train_ds.change_image_transform(resnet_transform_train)
@@ -132,7 +136,7 @@ def resnet_50_classification_loss():
         print('evaluting the model on testing data...')
         embedder.is_norm = True
         recall_at_k = cub_exp.evaluate_model(embedder)
-        embedder.is_norm = False
+        embedder.is_norm = train_cfg.is_norm
         metric_logger.log({'recall@{}'.format(k): v for k, v in recall_at_k.items()})
 
     # run experiment

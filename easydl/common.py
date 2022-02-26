@@ -7,6 +7,10 @@ import torch
 import numpy as np
 
 
+def all_to_device(*args, device=None):
+    o = [a.to(device) for a in args]
+    return tuple(o)
+
 def to_numpy(x):
     if isinstance(x, torch.Tensor):
         return x.data.cpu().numpy()

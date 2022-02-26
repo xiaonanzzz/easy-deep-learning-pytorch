@@ -39,3 +39,19 @@ class ProxyAnchorLoss(torch.nn.Module):
         loss = pos_term + neg_term
 
         return loss
+
+
+class MultiLoss(torch.nn.Module):
+    def __init__(self, losses, weights=None):
+        super(MultiLoss, self).__init__()
+        self.losses = losses
+        self.weights = torch.ones(len(losses)) if weights is None else torch.tensor(weights)
+
+    def forward(self, X, T):
+        total_loss = 0.0
+        for i, loss_func in enumerate(self.losses):
+            lv = loss_func(X, T)
+            lv = self.weights[i] * lv
+            total_loss += lv
+
+        return total_loss

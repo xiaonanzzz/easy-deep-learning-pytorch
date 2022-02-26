@@ -18,7 +18,7 @@ class LossAverage(object):
         return float(np.mean(self.losses))
 
 
-def forward_backward_one_step(model, criterion, x, y, opt, train_cfg:TrainingConfig, run_cfg: RuntimeConfig, store={}):
+def forward_backward_one_step(model, criterion, x, y, opt: torch.optim.Optimizer, train_cfg:TrainingConfig, run_cfg: RuntimeConfig, store={}):
     model.train()
     model.to(run_cfg.device)
     criterion.to(run_cfg.device)
@@ -30,8 +30,8 @@ def forward_backward_one_step(model, criterion, x, y, opt, train_cfg:TrainingCon
     loss.backward()
 
     assert torch.isnan(loss).sum() == 0
-    torch.nn.utils.clip_grad_value_(model.parameters(), train_cfg.clip_gradient)
-    torch.nn.utils.clip_grad_value_(criterion.parameters(), train_cfg.clip_gradient)
+    for pg in opt.param_groups:
+        torch.nn.utils.clip_grad_value_(pg['params'], train_cfg.clip_gradient)
 
     # must do step
     opt.step()

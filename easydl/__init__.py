@@ -1,6 +1,7 @@
-__version__ = "2.18"
+__version__ = "2.19"
 
 """
+2.19 try multi loss in dml
 2.18 refactor metric logger
 2.17 add config of lr_min for cosine scheduler
 2.16 debuging image classification module, fixed the issue of no shuffle in training...

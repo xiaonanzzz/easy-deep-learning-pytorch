@@ -1,5 +1,5 @@
 from easydl.datasets.cub import CubMetricLearningExperiment
-from easydl.metric_learning import ProxyAnchorLossConfig, train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze
+from easydl.metric_learning import *
 from easydl.config import TrainingConfig, RuntimeConfig, ConfigBase, get_config_from_cmd
 from easydl.experiments import WandbExperiment
 from easydl.image_transform import resnet_transform_train, resnet_transform_test
@@ -145,13 +145,51 @@ def resnet_50_clf_loss_v1():
         epoch_end_hook=epoch_end)
 
 
+def multi_loss_v1():
+    # prepare configurations
+    train_cfg = TrainingConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='cosine',
+                               lr_decay_step=5, train_batch_size=120, train_epoch=60)
+    train_cfg.update_values_from_cmd()
+    train_cfg.is_norm = False
+    train_cfg.pretrained = True
+    train_cfg.bn_freeze = True
+
+    run_cfg = RuntimeConfig(project_name='cub-dml')
+    run_cfg.update_values_from_cmd()
+    algo_cfg = ProxyAnchorLossConfig()
+    algo_cfg.update_values_from_cmd()
+
+    # prepare experiments
+    cub_exp = CubMetricLearningExperiment()
+    wandb_exp = WandbExperiment(run_cfg)
+    model = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=train_cfg.pretrained, is_norm=train_cfg.is_norm, bn_freeze=train_cfg.bn_freeze)
+
+    cub_exp.train_ds.change_image_transform(resnet_transform_train)
+    cub_exp.test_ds.change_image_transform(resnet_transform_test)
+
+    metric_logger = wandb_exp.metric_logger
+    metric_logger.update_config(train_cfg.dict())
+    metric_logger.update_config(algo_cfg.dict())
+
+    def epoch_end(**kwargs):
+        print('evaluting the model on testing data...')
+        recall_at_k = cub_exp.evaluate_model(model)
+        metric_logger.log({'recall@{}'.format(k): v for k, v in recall_at_k.items()})
+
+    # run experiment
+    train_embedder_proxy_anchor_loss_and_classification_loss(model, cub_exp.train_ds, cub_exp.train_classes,
+                                                             metric_logger, train_cfg, run_cfg, algo_cfg,
+                                                             epoch_end_hook=epoch_end,
+                                                             freezing_params_during_warmup=model.get_pretrained_parameters())
+
+
 if __name__ == '__main__':
     """
     export PYTHONPATH=$HOME/efs/easy-deep-learning-pytorch
 
     python3 -m easydl.example.proxy_anchor_loss_cub --project_name cub-dml
     """
-    func_name = get_config_from_cmd('func', 'resnet_50_from_scratch')
+    func_name = get_config_from_cmd('func', 'multi_loss_v1')
     print('executing function ...', func_name)
     globals()[func_name]()
 

@@ -149,10 +149,11 @@ def multi_loss_v1():
     # prepare configurations
     train_cfg = TrainingConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='cosine',
                                lr_decay_step=5, train_batch_size=120, train_epoch=60)
-    train_cfg.update_values_from_cmd()
     train_cfg.is_norm = False
     train_cfg.pretrained = True
     train_cfg.bn_freeze = True
+    train_cfg.update_values_from_cmd()
+
 
     run_cfg = RuntimeConfig(project_name='cub-dml')
     run_cfg.update_values_from_cmd()

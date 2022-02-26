@@ -50,9 +50,9 @@ def on_epoch_end(opt: torch.optim.Optimizer, scheduler: torch.optim.lr_scheduler
         pbar.close()
 
     if loss_avg:
-        metric_logger.log({'training_loss': loss_avg.mean()})
+        metric_logger.log({metric_logger.TrainLossMovingAverage: loss_avg.mean()})
     for idx, lr in enumerate(scheduler.get_last_lr()):
-        metric_logger.log({'last_lr_{}'.format(idx): float(lr)})
+        metric_logger.log({'{}_{}'.format(metric_logger.LastLr, idx): float(lr)})
 
     # perform must do actions
     scheduler.step()

@@ -1,5 +1,8 @@
 import os
 from collections import Counter
+
+import wandb
+
 from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path
 import easydl
 
@@ -51,7 +54,14 @@ class FilePrinter(PrinterInterface):
         except:
             pass
 
+
 class MetricLogger(object):
+    TrainLossMovingAverage = 'train_loss_mavg'
+    TrainAccuracyMovingAverage = 'train_acc_mavg'
+    TestAccuracy = 'test_accuracy'
+    TrainAccuracy = 'train_accuracy'
+    LastLr = 'last_lr'
+
     def __init__(self, *args, **kwargs):
         super(MetricLogger, self).__init__(*args, **kwargs)
 
@@ -142,6 +152,7 @@ class WandbLogger(MetricLogger):
         # if step is given, use it. otherwise, use the max step of metrics
         self.run.log(metric_dict, step=step or max(self.log_count.values()))
 
+
     def close(self):
         if self.run is None:
             return
@@ -162,7 +173,7 @@ def get_wandb_key(arg_name='wandb_key'):
         with open(os.path.expanduser('~/wandb_key.txt'), 'rt') as f:
             wandb_key = f.read()
             if wandb_key is not None:
-                return wandb_key
+                return wandb_key.strip()
 
     return None
 
@@ -207,5 +218,4 @@ class WandbExperiment:
                                        working_dir=working_dir)
             loggers.append(wandb_logger)
         self.metric_logger = MultiMetricLogger(loggers)
-
 

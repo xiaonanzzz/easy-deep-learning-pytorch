@@ -74,17 +74,17 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
         scheduler.step()
 
         # epoch end
-        metric_logger.log({'last_lr': float(scheduler.get_last_lr()[0]),
-                           'train_loss_mean': np.mean(losses_per_epoch),
-                           'train_acc_mean': acc_avg.accuracy()
+        metric_logger.log({metric_logger.LastLr: float(scheduler.get_last_lr()[0]),
+                           metric_logger.TrainLossMovingAverage: np.mean(losses_per_epoch),
+                           MetricLogger.TrainAccuracyMovingAverage: acc_avg.accuracy()
                            })
         model.eval()
         if eval_train_ds:
             met = evaluate_classification_model(model, train_ds, run_cfg)
-            metric_logger.log({'train_accuracy': met['accuracy']})
+            metric_logger.log({metric_logger.TrainAccuracy: met['accuracy']})
         if test_ds is not None:
             met = evaluate_classification_model(model, test_ds, run_cfg)
-            metric_logger.log({'test_accuracy': met['accuracy']})
+            metric_logger.log({metric_logger.TestAccuracy: met['accuracy']})
         if epoch_end_hook is not None:
             print('epoch done. calling hook function...')
             epoch_end_hook(locals=locals())

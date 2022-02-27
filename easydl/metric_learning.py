@@ -7,7 +7,6 @@ from easydl.config import *
 from easydl.training_common import forward_backward_one_step, LossAverage, on_epoch_end, prepare_optimizer, \
     prepare_lr_scheduler
 from easydl.mlp_model import LinearClassifier
-from easydl.experiments import PrintMetricLogger
 from tqdm import *
 
 

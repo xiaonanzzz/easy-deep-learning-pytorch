@@ -1,7 +1,7 @@
 from easydl.datasets.cub import CubMetricLearningExperiment
 from easydl.metric_learning import *
 from easydl.config import TrainingConfig, RuntimeConfig, ConfigBase, get_config_from_cmd
-from easydl.experiments import WandbExperiment
+from easydl.experiments import MetricLogger
 from easydl.image_transform import resnet_transform_train, resnet_transform_test
 from easydl.image_model import Resnet50PALVersion
 from easydl.mlp_model import EmbedderClassifier
@@ -43,13 +43,12 @@ def proxy_anchor_loss_paper():
 
     # prepare experiments
     cub_exp = CubMetricLearningExperiment()
-    wandb_exp = WandbExperiment(run_cfg)
+    metric_logger = MetricLogger(run_cfg)
     model = Resnet50PALVersion(algo_cfg.embedding_size, **model_cfg)
 
     cub_exp.train_ds.change_image_transform(resnet_transform_train)
     cub_exp.test_ds.change_image_transform(resnet_transform_test)
 
-    metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
     metric_logger.update_config(model_cfg)
@@ -80,14 +79,13 @@ def resnet_50_from_scratch():
 
     # prepare experiments
     cub_exp = CubMetricLearningExperiment()
-    wandb_exp = WandbExperiment(run_cfg)
+    metric_logger = MetricLogger(run_cfg)
 
     model = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=False, bn_freeze=False)
 
     cub_exp.train_ds.change_image_transform(resnet_transform_train)
     cub_exp.test_ds.change_image_transform(resnet_transform_test)
 
-    metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
 
@@ -106,7 +104,7 @@ def resnet_50_clf_loss_v1():
     run_cfg = RuntimeConfig()
     run_cfg.update_values_from_cmd()
     run_cfg.tags.append('resnet_50_clf_loss_v1')
-    wandb_exp = WandbExperiment(run_cfg)
+    metric_logger = MetricLogger(run_cfg)
 
     train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-5, lr_scheduler_type='cosine',
                                train_batch_size=120, train_epoch=60)
@@ -128,7 +126,6 @@ def resnet_50_clf_loss_v1():
     cub_exp.train_ds.change_image_transform(resnet_transform_train)
     cub_exp.test_ds.change_image_transform(resnet_transform_test)
 
-    metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
 
@@ -162,13 +159,12 @@ def multi_loss_v1():
 
     # prepare experiments
     cub_exp = CubMetricLearningExperiment()
-    wandb_exp = WandbExperiment(run_cfg)
+    metric_logger = MetricLogger(run_cfg)
     model = Resnet50PALVersion(algo_cfg.embedding_size, pretrained=train_cfg.pretrained, is_norm=train_cfg.is_norm, bn_freeze=train_cfg.bn_freeze)
 
     cub_exp.train_ds.change_image_transform(resnet_transform_train)
     cub_exp.test_ds.change_image_transform(resnet_transform_test)
 
-    metric_logger = wandb_exp.metric_logger
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
 

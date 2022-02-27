@@ -5,7 +5,7 @@ import easydl
 from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd, update_configs_from_cmd
 from easydl.image_model import SimpleNet, SimpleNetV2
 from easydl.image_classification import train_image_classification_model_2021_nov
-from easydl.experiments import prepare_logger, WandbExperiment
+from easydl.experiments import MetricLogger
 
 
 transform_train = transforms.Compose([
@@ -25,6 +25,12 @@ def get_cifar_image_transformer():
 
 
 def train_cifar():
+    run_cfg = RuntimeConfig()
+    run_cfg.update_values_from_cmd()
+
+    # prepare experiments
+    metric_logger = MetricLogger(run_cfg)
+
     # get configurations from cmd
     train_cfg = TrainingConfig(optimizer='sgd', lr=0.01, weight_decay=5e-4, lr_scheduler_type='cosine',
                                train_epoch=100, train_batch_size=128)
@@ -33,13 +39,7 @@ def train_cifar():
     train_cfg.update_values_from_cmd()
     model_name = train_cfg.model_name
 
-    run_cfg = RuntimeConfig()
-    run_cfg.update_values_from_cmd()
-    run_cfg.tags.append(model_name)
-
-    # prepare experiments
-    wandb_exp = WandbExperiment(run_cfg)
-    metric_logger = wandb_exp.metric_logger
+    metric_logger.update_config(train_cfg.dict())
 
     train_ds = CIFAR10(run_cfg.pytorch_data, train=True, download=True, transform=transform_train)
     test_ds = CIFAR10(run_cfg.pytorch_data, train=False, download=True, transform=transform_test)

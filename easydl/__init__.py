@@ -1,4 +1,11 @@
-__version__ = "2.19"
+__version__ = "3.0"
+
+
+"""
+3.0 code refactor
+
+"""
+
 
 """
 2.19 try multi loss in dml

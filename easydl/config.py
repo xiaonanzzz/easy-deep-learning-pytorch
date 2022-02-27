@@ -35,17 +35,28 @@ def merging_configs(*configs: [ConfigBase]):
         cfg.from_dict(c.dict())
     return cfg
 
+def parse_torch_device(device_str):
+    """ auto, cpu, cuda, cuda:0, ..."""
+    if device_str == 'auto':
+        return torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    else:
+        return torch.device(device_str)
+
 class RuntimeConfig(ConfigBase):
+
     def __init__(self, *args, **kwargs):
         self.device = parse_torch_device('auto')
         self.cpu_workers = 4
-        self.tqdm_disable = 0
-        self.infer_batch_size = 128
+        self.tqdm_disable = False
+        self.infer_batch_size = 32
         self.model_dir = ''
+
         self.project_name = 'debug'
         self.wandb_dir = '~/wandb-exp'
+        self.use_wandb = True
         self.pytorch_data = '~/pytorch_data'
         self.tags = []
+        self.local_exp_dir = ''
 
         self.print_verbose = 1  # level of print out, 0, 1, 2. by default print level 1, but not level 2 above
         self.debug = False
@@ -81,12 +92,6 @@ class TrainingConfig(ConfigBase):
         # read from kwargs
         self.from_dict(kwargs)
 
-def parse_torch_device(device_str):
-    """ auto, cpu, cuda, cuda:0, ..."""
-    if device_str == 'auto':
-        return torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    else:
-        return torch.device(device_str)
 
 def get_config_from_cmd(key, default=None, do_not_expand_path=False):
     """

@@ -1,5 +1,5 @@
 import tqdm
-
+from collections import defaultdict
 from easydl import to_numpy
 from easydl.config import TrainingConfig, RuntimeConfig
 import torch
@@ -8,6 +8,7 @@ import easydl
 
 
 class LossAverage(object):
+
     def __init__(self):
         self.losses = []
 
@@ -18,7 +19,25 @@ class LossAverage(object):
         return float(np.mean(self.losses))
 
 
-def forward_backward_one_step(model, criterion, x, y, opt: torch.optim.Optimizer, train_cfg:TrainingConfig, run_cfg: RuntimeConfig, store={}):
+loss_average_dict = {}
+
+
+def append_loss(name, loss):
+    if name not in loss_average_dict:
+        loss_average_dict[name] = LossAverage()
+
+    loss_average_dict[name].append(loss)
+
+
+def get_loss_moving_avg(name, delete=True):
+    mavg = loss_average_dict[name].mean()
+    if delete:
+        del loss_average_dict[name]
+    return mavg
+
+
+def forward_backward_one_step(model, criterion, x, y, opt: torch.optim.Optimizer, train_cfg: TrainingConfig,
+                              run_cfg: RuntimeConfig, store={}):
     model.train()
     model.to(run_cfg.device)
     criterion.to(run_cfg.device)
@@ -108,3 +127,14 @@ def prepare_lr_scheduler(args: TrainingConfig, opt):
         raise NotImplementedError()
 
     return lr
+
+
+class EpochTrainer:
+    def __init__(self):
+        self.param_groups = None
+        self.train_cfg
+        self.opt = None
+        self.scheduler = None
+        self.epoch = 0
+
+

@@ -9,7 +9,7 @@ from torchvision.models import resnet50
 
 def cub_image_classification_2021_nov():
     # run configuration first
-    run_cfg = RuntimeConfig()
+    run_cfg = RuntimeConfig(project_name='cub-classification')
     run_cfg.update_values_from_cmd()
     run_cfg.tags.append('resnet 50')
 
@@ -17,8 +17,8 @@ def cub_image_classification_2021_nov():
     metric_logger = MetricLogger(run_cfg)
 
     # prepare configurations
-    train_cfg = TrainingConfig(optimizer='sgd', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
-                               lr_decay_step=10, train_batch_size=64, train_epoch=30)
+    train_cfg = TrainingConfig(optimizer='sgd', lr=0.003, weight_decay=1e-4, lr_scheduler_type='cosine',
+                               lr_decay_step=10, train_batch_size=32, train_epoch=95, nesterov=True)
     train_cfg.model = 'resnet50'
     train_cfg.image_size = 448
     train_cfg.pretrained = True

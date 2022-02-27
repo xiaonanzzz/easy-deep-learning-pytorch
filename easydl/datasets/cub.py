@@ -5,7 +5,7 @@ from easydl.datasets.image_dataset import ImageDataset
 import numpy as np
 from easydl.image_transform import resnet_transform_train, resnet_transform_test, make_transform_train_v1, make_transform_test_v1
 from easydl.metrics import recall_in_k_self_retrieval
-from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd
+from easydl.config import get_config_from_cmd
 
 _metric_learning_evaluation_k_list = [1, 2, 4, 8]
 

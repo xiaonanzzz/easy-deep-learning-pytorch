@@ -1,7 +1,8 @@
-__version__ = "3.0"
+__version__ = "3.1"
 
 
 """
+3.1 move examples to easydl_example
 3.0 code refactor
 
 """

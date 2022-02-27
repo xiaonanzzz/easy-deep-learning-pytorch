@@ -1,3 +1,5 @@
+import warnings
+
 import os
 from collections import Counter
 from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path
@@ -14,6 +16,7 @@ class MetricLogger(object):
     def __init__(self, run_cfg:RuntimeConfig, *args, **kwargs):
 
         self.run = None     # if None, wandb is not init or not used
+        self.run_cfg = run_cfg
         if run_cfg.debug:
             print('!!! debug mode, wandb logger is not used.')
             return
@@ -21,6 +24,7 @@ class MetricLogger(object):
             self.log_count = Counter()
             self._init_wandb(run_cfg)
         else:
+            os.makedirs(run_cfg.local_exp_dir, exist_ok=True)
             print('Wandb is disabled...')
 
     def _init_wandb(self, run_cfg:RuntimeConfig):
@@ -54,6 +58,12 @@ class MetricLogger(object):
             self.log_count.update(list(metric_dict.keys()))
             # if step is given, use it. otherwise, use the max step of metrics
             self.run.log(metric_dict, step=step or max(self.log_count.values()))
+
+    def get_path(self, rel_path):
+        if self.run:
+            return os.path.join(self.run.dir, rel_path)
+        else:
+            return os.path.join(self.run_cfg.local_exp_dir, rel_path)
 
     def close(self):
         if self.run:

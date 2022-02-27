@@ -57,6 +57,7 @@ class RuntimeConfig(ConfigBase):
         self.pytorch_data = '~/pytorch_data'
         self.tags = []
         self.local_exp_dir = ''
+        self.tmp_dir = '~/tmp'
 
         self.print_verbose = 1  # level of print out, 0, 1, 2. by default print level 1, but not level 2 above
         self.debug = False
@@ -79,6 +80,7 @@ class TrainingConfig(ConfigBase):
         self.nesterov = False
         self.clip_gradient = 10
 
+        # learning rate scheduler related configuration
         self.warmup_epoch = 1
         self.lr_scheduler_type = 'step'     # support: ['step', 'cosine']
         self.lr_decay_step = 10

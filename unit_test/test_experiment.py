@@ -1,14 +1,23 @@
 import os.path
 
-from easydl.experiments import WandbExperiment
+import wandb
+
+from easydl.experiments import MetricLogger
+from easydl import RuntimeConfig, save_model
+from easydl.mlp_model import LinearClassifier
 
 
 def test_wandb():
-    exp = WandbExperiment('debug', working_dir='~/tmp')
-    print(exp.__dict__)
+    cfg = RuntimeConfig()
 
-    assert os.path.exists(exp.working_dir)
+    metric_logger = MetricLogger(cfg)
 
+    save_path = metric_logger.get_path('linear_clf.torch')
+
+    model = LinearClassifier(32, 10)
+    save_model(model, save_path)
+
+    wandb.finish()
 
 
 if __name__ == '__main__':

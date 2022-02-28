@@ -130,7 +130,8 @@ def cub_image_classification_convnext_model():
         classifier = convnext_tiny(pretrained=train_cfg.pretrained)
         classifier.head = torch.nn.Linear(classifier.head.in_features, cub_exp.n_classes)
     elif train_cfg.model == 'base_22k':
-        classifier = convnext_base(pretrained=train_cfg.pretrained, in_22k=True)
+        # because it's pre-trained on 22k, so, set num_classes = 21841
+        classifier = convnext_base(pretrained=train_cfg.pretrained, in_22k=True, num_classes=21841)
         classifier.head = torch.nn.Linear(classifier.head.in_features, cub_exp.n_classes)
     elif train_cfg.model == 'base_1k':
         classifier = convnext_base(pretrained=train_cfg.pretrained, in_22k=False)
@@ -148,6 +149,6 @@ if __name__ == '__main__':
     export PYTHONPATH=$HOME/efs/easy-deep-learning-pytorch
 
     """
-    func_name = get_config_from_cmd('func', 'cub_image_classification_2021_nov')
+    func_name = get_config_from_cmd('func', 'cub_image_classification_convnext_model')
     print('executing function ...', func_name)
     globals()[func_name]()

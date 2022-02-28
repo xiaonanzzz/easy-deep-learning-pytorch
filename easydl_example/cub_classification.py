@@ -88,7 +88,7 @@ def cub_image_classification_timm_data_aug():
 def cub_image_classification_convnext_model():
     from timm.data import create_transform
     from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-    from easydl_example.convnext import convnext_tiny
+    from easydl_example.convnext import convnext_tiny, convnext_base
     import torch
     # run configuration first
     run_cfg = RuntimeConfig(project_name='cub-classification')
@@ -101,7 +101,7 @@ def cub_image_classification_convnext_model():
     # prepare configurations
     train_cfg = TrainingConfig(optimizer='sgd', lr=0.003, weight_decay=1e-4, lr_scheduler_type='cosine',
                                lr_decay_step=10, train_batch_size=32, train_epoch=95, nesterov=True)
-    train_cfg.model = 'resnet50'
+    train_cfg.model = 'base_22k'
     train_cfg.image_size = 448
     train_cfg.pretrained = True
     train_cfg.color_jitter = 0.4
@@ -125,9 +125,15 @@ def cub_image_classification_convnext_model():
         mean=IMAGENET_DEFAULT_MEAN,
         std=IMAGENET_DEFAULT_STD,
     ))
-
-    classifier = convnext_tiny(pretrained=train_cfg.pretrained)
-    classifier.head = torch.nn.Linear(classifier.head.in_features, cub_exp.n_classes)
+    if train_cfg.model == 'tiny':
+        classifier = convnext_tiny(pretrained=train_cfg.pretrained)
+        classifier.head = torch.nn.Linear(classifier.head.in_features, cub_exp.n_classes)
+    elif train_cfg.model == 'base_22k':
+        classifier = convnext_base(pretrained=train_cfg.pretrained, in_22k=True)
+        classifier.head = torch.nn.Linear(classifier.head.in_features, cub_exp.n_classes)
+    elif train_cfg.model == 'base_1k':
+        classifier = convnext_base(pretrained=train_cfg.pretrained, in_22k=False)
+        classifier.head = torch.nn.Linear(classifier.head.in_features, cub_exp.n_classes)
 
     metric_logger.update_config(train_cfg.dict())
 

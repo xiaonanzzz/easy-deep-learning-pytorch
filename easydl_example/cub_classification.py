@@ -99,10 +99,11 @@ def cub_image_classification_convnext_model():
     metric_logger = MetricLogger(run_cfg)
 
     # prepare configurations
+    # by default 224, train_batch_size=64, GPU ~= 9.6 GB,
     train_cfg = TrainingConfig(optimizer='sgd', lr=0.003, weight_decay=1e-4, lr_scheduler_type='cosine',
-                               lr_decay_step=10, train_batch_size=32, train_epoch=95, nesterov=True)
+                               lr_decay_step=10, train_batch_size=64, train_epoch=95, nesterov=True)
     train_cfg.model = 'base_22k'
-    train_cfg.image_size = 448
+    train_cfg.image_size = 224
     train_cfg.pretrained = True
     train_cfg.color_jitter = 0.4
     train_cfg.auto_augment = 'rand-m9-mstd0.5-inc1'

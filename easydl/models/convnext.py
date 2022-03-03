@@ -204,6 +204,18 @@ def convnext_xlarge(pretrained=False, in_22k=False, **kwargs):
     return model
 
 
+def get_convnext_version_augmentation_config():
+    from easydl.config import ImageAugmentationConfig
+    self = ImageAugmentationConfig()
+    self.image_size = 224
+    self.color_jitter = 0.4
+    self.timm_auto_augment = 'rand-m9-mstd0.5-inc1'
+    self.interpolation = 'bicubic'
+    self.random_erase_prob = 0.25
+    self.random_erase_mode = 'pixel'
+    self.random_erase_count = 1
+    return self
+
 if __name__ == '__main__':
     model = convnext_tiny(pretrained=True, )
     print(model)

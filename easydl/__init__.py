@@ -1,7 +1,8 @@
-__version__ = "3.1"
+__version__ = "3.2"
 
 
 """
+3.2 code refactoring, add ConvNeXt model
 3.1 move examples to easydl_example
 3.0 code refactor
 

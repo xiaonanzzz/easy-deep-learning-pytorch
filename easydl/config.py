@@ -1,3 +1,7 @@
+import warnings
+
+import sys
+
 import torch
 
 from .common import expand_path
@@ -64,6 +68,9 @@ class RuntimeConfig(ConfigBase):
 
         self.from_dict(kwargs)
 
+    def auto_magic(self):
+        self.update_values_from_cmd()
+
 
 class TrainingConfig(ConfigBase):
     """
@@ -92,6 +99,19 @@ class TrainingConfig(ConfigBase):
         self.train_epoch = 30
 
         # read from kwargs
+        self.from_dict(kwargs)
+
+
+class ImageAugmentationConfig(ConfigBase):
+    def __init__(self, *args, **kwargs):
+        self.image_size = 224
+        self.color_jitter = 0.4
+        self.timm_auto_augment = 'rand-m9-mstd0.5-inc1'
+        self.interpolation = 'bicubic'
+        self.random_erase_prob = 0.25
+        self.random_erase_mode = 'pixel'
+        self.random_erase_count = 1
+
         self.from_dict(kwargs)
 
 
@@ -130,6 +150,20 @@ def get_config_from_cmd(key, default=None, do_not_expand_path=False):
         print('WARNING!!! type difference: parsed value vs. default ', value, default)
     return value
 
+
+def change_cmd_arguments(key, value):
+    value = str(value)
+    args = sys.argv.copy()
+    arg_key = '--{}'.format(key)
+
+    try:
+        i = args.index(arg_key)
+        args[i+1] = value
+    except:
+        args.append(arg_key)
+        args.append(value)
+    warnings.warn('changing sys arguments from {} to {}'.format(sys.argv, args))
+    sys.argv = args
 
 def update_configs_from_cmd(config_dict, prefix=''):
     """

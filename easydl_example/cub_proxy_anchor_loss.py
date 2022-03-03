@@ -1,11 +1,11 @@
 from easydl.datasets.cub import CubMetricLearningExperiment
-from easydl.metric_learning import *
-from easydl.config import TrainingConfig, RuntimeConfig, ConfigBase, get_config_from_cmd
+from easydl.algorithm.metric_learning import *
+from easydl.config import TrainingConfig, RuntimeConfig, get_config_from_cmd
 from easydl.experiments import MetricLogger
 from easydl.image_transform import resnet_transform_train, resnet_transform_test
-from easydl.image_model import Resnet50PALVersion
-from easydl.mlp_model import EmbedderClassifier
-from easydl.image_classification import train_image_classification_model_2021_nov
+from easydl.models.image_model import Resnet50PALVersion
+from easydl.models.mlp_model import EmbedderClassifier
+from easydl.algorithm.image_classification import train_image_classification_model_2021_nov
 
 
 def proxy_anchor_loss_paper():

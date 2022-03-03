@@ -2,11 +2,11 @@ import numpy as np
 from torch.utils.data.sampler import BatchSampler
 
 import easydl
-from easydl.losses import ProxyAnchorLoss
+from easydl.algorithm.losses import ProxyAnchorLoss
 from easydl.config import *
 from easydl.training_common import forward_backward_one_step, LossAverage, on_epoch_end, prepare_optimizer, \
     prepare_lr_scheduler
-from easydl.mlp_model import LinearClassifier
+from easydl.models.mlp_model import LinearClassifier
 from tqdm import *
 
 

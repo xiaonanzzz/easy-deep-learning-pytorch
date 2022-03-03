@@ -1,13 +1,12 @@
 import unittest
 import easydl
-import torch
 
 
 class MyTestCase(unittest.TestCase):
 
     def test_prepare_opt_lr(self):
         from easydl.training_common import prepare_lr_scheduler, prepare_optimizer
-        from easydl.mlp_model import MLPEmbedder
+        from easydl.models.mlp_model import MLPEmbedder
         config = easydl.TrainingConfig(lr_scheduler_type='cosine')
         model = MLPEmbedder([128, 64])
 

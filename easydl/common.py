@@ -73,7 +73,6 @@ def end_timer(name):
     return tspan
 
 
-
 def profile_parameters(params):
     for param in params:
         yield {'size': param.size(), 'require_grad': param.data.requires_grad}

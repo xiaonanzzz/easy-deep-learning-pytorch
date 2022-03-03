@@ -1,10 +1,8 @@
-import os.path
-
 import wandb
 
 from easydl.experiments import MetricLogger
 from easydl import RuntimeConfig, save_model
-from easydl.mlp_model import LinearClassifier
+from easydl.models.mlp_model import LinearClassifier
 
 
 def test_wandb():

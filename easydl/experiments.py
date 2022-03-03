@@ -2,7 +2,7 @@ import warnings
 
 import os
 from collections import Counter
-from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path
+from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path, TrainingConfig
 import easydl
 
 

@@ -1,7 +1,8 @@
-tqdm>=4.61.0
-scikit-learn>=0.24.2
-torch>=1.8.1
+scikit-learn>=1.0.2
 numpy>=1.20.2
-fastparquet
-torchvision
-wandb
+torch>=1.10.1
+torchaudio>=0.10.1
+torchvision>=0.11.2
+timm>=0.5.4
+tqdm>=4.62.3
+wandb>=0.12.10

@@ -4,7 +4,7 @@ from torch.nn import functional
 from torchvision.models.resnet import resnet50
 import torch.nn.init as init
 
-from easydl.mlp_model import LinearEmbedder
+from easydl.models.mlp_model import LinearEmbedder
 
 
 def get_pytorch_model(name, num_classes, pretrained=True):

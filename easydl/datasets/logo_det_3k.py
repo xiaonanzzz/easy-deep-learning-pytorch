@@ -11,6 +11,22 @@ from sklearn.model_selection import train_test_split
 import shutil
 from collections import Counter
 
+"""
+Examples: 
+
+python -i -m easydl.datasets.logo_det_3k
+
+# ===== create a yolo format dataset
+
+# === mini version, 2 images in train, 1 image per class in test
+prepare_for_yolo(True)
+
+# full version
+prepare_for_yolo(False)
+
+"""
+
+
 
 def getImagesInDir(rootdir):
     print('collecting all images under', rootdir)
@@ -43,7 +59,8 @@ class LogoDet3KConfig(object):
         self.original_dir = '~/data/LogoDet-3K'
         self.yolo_folder = '~/data/LogoDet-3K-yolo'
         self.original_annotation_name = 'original_annotation.csv'
-        self.class_file_name = 'classes.csv'
+        self.class_file_name = 'class_index.csv'
+        self.yml_file_name = 'logo_3k.yml'
         self.test_ratio = 0.5
         self.random_seed = 7
         self.subset = False   # 2 images in train, 1 images in test
@@ -128,7 +145,7 @@ def generate_yolo_folder(cfg: LogoDet3KConfig):
     print('train set', len(train_set), 'test set', len(test_set))
     annotation_df['is_test'] = annotation_df['key'].isin(test_set)
 
-    pd.Series(class_arr, name='class_name').to_csv(Path(cfg.yolo_folder).expanduser() / 'class_index.csv', index=False)
+    pd.Series(class_arr, name='class_name').to_csv(Path(cfg.yolo_folder).expanduser() / cfg.class_file_name, index=False)
 
     train_counter, test_counter = Counter(), Counter()
 
@@ -172,7 +189,7 @@ def generate_yolo_folder(cfg: LogoDet3KConfig):
         out_file.close()
 
 
-def prepare_for_yolo(mini=True):
+def prepare_for_yolo(mini=False):
     cfg = LogoDet3KConfig()
     if mini:
         cfg.yolo_folder = '~/data/LogoDet-3K-yolo-mini'
@@ -184,4 +201,22 @@ def prepare_for_yolo(mini=True):
         get_all_annotations(cfg)
 
     generate_yolo_folder(cfg)
+
+def prepare_for_yolo_yml(mini=False):
+    cfg = LogoDet3KConfig()
+    if mini:
+        cfg.yolo_folder = '~/data/LogoDet-3K-yolo-mini'
+        cfg.subset = True
+
+    # generate yml
+    root = Path(cfg.yolo_folder)
+    # load
+    class_arr = pd.read_csv(root.expanduser() / cfg.class_file_name)['class_name'].tolist()
+
+    with open(root.expanduser() / cfg.yml_file_name, 'w') as f:
+        f.write('path: {}\n'.format(root.as_posix()))
+        f.write('train: {}\n'.format('images/train'))
+        f.write('val: {}\n'.format('images/test'))
+        f.write('nc: {}\n'.format(len(class_arr)))
+        f.write('names: {}\n'.format(class_arr))
 

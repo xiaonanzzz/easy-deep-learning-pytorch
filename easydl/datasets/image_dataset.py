@@ -1,6 +1,7 @@
 import os.path
-
+import pandas as pd
 import PIL
+from pathlib import Path
 from torchvision.datasets.folder import default_loader
 import numpy as np
 
@@ -46,4 +47,21 @@ class ImageDataset:
         impath = self.im_paths[I]
         labels = self.labels[I]
         return ImageDataset(impath, labels, transform=self.transform, item_schema=self.item_schema)
+
+
+def convert_pandas_dataset_to_image_dataset(df: pd.DataFrame, image_root='', image_col='image', label_col='label', transform=None, encode_label=True) -> ImageDataset:
+    
+    labels = df[label_col].to_list()
+
+    if len(image_root) > 0:
+        rootd = Path(image_root).expanduser()
+        assert rootd.exists()
+        # add image root
+        images = df[image_col].map(lambda x: (rootd / x)).to_list()
+    else:
+        images = df[image_col].to_list()
+    item_schema = ('image', 'label_code') if encode_label else ('image', 'label')
+    return ImageDataset(images, labels, transform=transform, item_schema=item_schema)
+
+
 

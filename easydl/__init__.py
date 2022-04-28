@@ -1,7 +1,8 @@
-__version__ = "3.3"
+__version__ = "3.4"
 
 
 """
+3.4 add cars 196 dataset and DML experiment setting
 3.3 add deep fashion inshop dataset
 3.2 code refactoring, add ConvNeXt model
 3.1 move examples to easydl_example

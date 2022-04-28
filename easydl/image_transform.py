@@ -27,6 +27,9 @@ resnet_transform_test = make_transform_test_v1(image_size=224)
 
 
 def timm_image_transform_imagenet_default(aug_cfg: ImageAugmentationConfig, is_training=True):
+    """
+    this code is compatible with timm == 0.5.4 version
+    """
     from timm.data import create_transform
     from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
     t = create_transform(

@@ -25,6 +25,9 @@ class ConfigBase(object):
     def dict(self):
         return self.__dict__.copy()
 
+    def from_other(self, other):
+        self.from_dict(other.__dict__)
+
     def from_dict(self, kwargs):
         for k, v in kwargs.items():
             self.__dict__[k] = v
@@ -70,6 +73,7 @@ class RuntimeConfig(ConfigBase):
 
     def auto_magic(self):
         self.update_values_from_cmd()
+
 
 
 class TrainingConfig(ConfigBase):

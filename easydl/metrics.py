@@ -41,6 +41,22 @@ def recall_in_k_pytorch(query_x, query_y, index_x, index_y, k_list=1, metric='co
     else:
         raise TypeError('Ks type not supported')
 
+def recall_in_k_query_index(model, query_ds, index_ds, k_list):
+    """
+    return: a dictionary of { k (int): recall_at_k (float) }
+    """
+
+    # calculate embeddings with model and get targets
+    model.eval()
+    print('processing input datasets to get embedding and labels...')
+    x, y = batch_process_x_y_dataset_and_concat(query_ds, model, tqdm_disable=False)
+    x_index, y_index = batch_process_x_y_dataset_and_concat(index_ds, model, tqdm_disable=False)
+
+    # because it's self retrieval, so ignore the first one
+    print('calulating recall...')
+    ret = recall_in_k_pytorch(x, y, x_index, y_index, k_list=k_list, ignore_k=0)
+
+    return ret
 
 def recall_in_k_self_retrieval(model, testds, k_list):
     """

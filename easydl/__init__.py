@@ -1,7 +1,8 @@
-__version__ = "3.2"
+__version__ = "3.3"
 
 
 """
+3.3 add deep fashion inshop dataset
 3.2 code refactoring, add ConvNeXt model
 3.1 move examples to easydl_example
 3.0 code refactor

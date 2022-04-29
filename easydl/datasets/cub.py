@@ -9,6 +9,18 @@ from easydl.config import get_config_from_cmd
 
 _metric_learning_evaluation_k_list = [1, 2, 4, 8]
 
+"""
+data folder should look like:
+CUB_200_2011/
+    images/ 
+    image_class_labels.txt
+    train_test_split_txt
+    classes.txt
+    ...
+
+"""
+
+
 
 class CUBirdsHelper(object):
     """
@@ -114,7 +126,7 @@ class Cub2011MetricLearningDS:
 
 class CubClassificationExperiment:
     def __init__(self, image_size):
-        self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011')
+        self.data_path = get_config_from_cmd('data_path', '~/data')
         self.train_ds = CubClassificationDS(self.data_path, split='train', image_transform=make_transform_train_v1(image_size=image_size))
         self.test_ds = CubClassificationDS(self.data_path, split='test', image_transform=make_transform_test_v1(image_size=image_size))
         self.n_classes = 200
@@ -122,7 +134,7 @@ class CubClassificationExperiment:
 
 class CubMetricLearningExperiment:
     def __init__(self):
-        self.data_path = get_config_from_cmd('data_path', '~/data/CUB_200_2011')
+        self.data_path = get_config_from_cmd('data_path', '~/data')
         self.train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=resnet_transform_train)
         self.test_ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=resnet_transform_test)
         self.k_list = _metric_learning_evaluation_k_list

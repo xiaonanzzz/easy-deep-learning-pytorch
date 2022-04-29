@@ -6,6 +6,9 @@ import torch.nn.init as init
 
 from easydl.models.mlp_model import LinearEmbedder
 
+"""
+Attention: Try to depend only on torch, so that it's easy to export these models
+"""
 
 def get_pytorch_model(name, num_classes, pretrained=True):
     from torchvision.models import resnet50

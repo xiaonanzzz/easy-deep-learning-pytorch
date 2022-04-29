@@ -2,6 +2,9 @@ import torch
 from torch import nn
 from torch.nn.functional import normalize
 
+"""
+Attention: Try to depend only on torch, so that it's easy to export these models
+"""
 
 class L2Normalization(torch.nn.Module):
     def __init__(self, dim=1):

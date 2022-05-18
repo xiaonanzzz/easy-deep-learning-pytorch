@@ -1,8 +1,11 @@
+from argparse import Namespace
 from tkinter import W
 import xml.etree.ElementTree as ET
 import os
 from pathlib import Path
 import shutil
+from PIL import Image
+
 
 VocAnnotationKVType = {
     'width': int,
@@ -23,7 +26,7 @@ YoloAnnotationKVType = {
 }
 
 
-def read_voc_annotation(in_file) -> list:
+def read_voc_annotation(in_file, image_path=None) -> list:
     """ return a list of dict
     {'width', 'height', 'name', 'xmin', 'xmax', 'ymin', 'ymax'}
     image width, image height, class name/id, bbox coordinates
@@ -33,16 +36,27 @@ def read_voc_annotation(in_file) -> list:
     root = tree.getroot()
     size = root.find('size')
 
+    width = int(size.find('width').text)
+    height = int(size.find('height').text)
+
+    if image_path:
+        img = Image.open(image_path)
+
+    if img.size != (width, height):
+        print(f'Warning: mismatch image size between {image_path} {img.size} and {(width, height)}, using the image size')
+        width, height = img.size
+
     annotation_arr = []
     for obj in root.iter('object'):
         xmlbox = obj.find('bndbox')
         anno = {
-            'width': int(size.find('width').text), 
-            'height': int(size.find('height').text), 
+            'width': width, 
+            'height': height, 
             'name': obj.find('name').text,
         }
         for key in ['xmin', 'xmax', 'ymin', 'ymax']:
             anno[key] = int(xmlbox.find(key).text)
+        assert (0 <= anno['xmin'] <= anno['xmax'] <= width) and (0 <= anno['ymin'] <= anno['ymax'] <= height), f'wrong anno {anno}'
 
         annotation_arr.append(anno)
     return annotation_arr
@@ -55,7 +69,7 @@ def voc2yolo(voc: dict, class_arr):
     xc = (xmin + xmax) / (2.0 * w)
     yc = (ymin + ymax) / (2.0 * h)
     bw = (xmax - xmin) / w
-    bh = (xmax - xmin) / h
+    bh = (ymax - ymin) / h
     return {
         'class': class_arr.index(voc['name']),
         'xc': xc,
@@ -92,7 +106,7 @@ def voc_dataset_to_yolo(image_df, yolo_image_dir, yolo_label_dir, class_arr):
         shutil.copy(imagef, os.path.join(yolo_image_dir, base_name))
 
         # 
-        voc_annos = read_voc_annotation(annof)
+        voc_annos = read_voc_annotation(annof, image_path=imagef)
         yolo_annos = [voc2yolo(x, class_arr) for x in voc_annos]
 
         fname = Path(base_name).with_suffix('.txt')

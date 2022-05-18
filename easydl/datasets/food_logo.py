@@ -14,6 +14,17 @@ from collections import Counter
 
 
 class FoodLogoDatasetHelper:
+    """
+    image_list.csv 
+    => columns: {
+        id : image id, numbers
+        image : relative path to root dir
+        annotation : relative path to root dir
+        split (str): train, val, test
+    }
+    """
+
+
     def __init__(self, data_root='~/data/FoodLogoDet-1500') -> None:
         self.data_root = data_root
     
@@ -113,6 +124,24 @@ class FoodLogoDatasetHelper:
             f.write('nc: {}\n'.format(len(class_arr)))
             f.write('names: {}\n'.format(class_arr))
 
+
+    def check_image_size(self):
+        from easydl.datasets.tools import read_voc_annotation
+        from PIL import Image
+        rootp = Path(self.data_root).expanduser()
+        metap = rootp / 'image_list.csv'
+
+        imagedf = pd.read_csv(metap)
+        
+        for (imagep, annop) in imagedf[['image', 'annotation']].itertuples(index=False):
+            img = Image.open(rootp / imagep)
+            (w, h) = img.size
+            annotations = read_voc_annotation(rootp / annop)
+            for anno in annotations:
+                if (anno['width'] != w or anno['height'] != h) or (not (0 <= anno['xmin'] <= anno['xmax'] <= w)) or (not (0 <= anno['ymin'] <= anno['ymax'] <= h)):
+                    print(f'wrong annotation imagep={imagep}, size={img.size}, anno={anno}')
+
+    
     
     def main(self):
         import argparse
@@ -126,6 +155,8 @@ class FoodLogoDatasetHelper:
             self.generate_image_list()
         elif args.action == 'yolo':
             self.yolo()
+        elif args.action == 'check':
+            self.check_image_size()
         else:
             raise NotImplementedError(f'unknown action')
         

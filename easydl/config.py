@@ -63,7 +63,7 @@ class RuntimeConfig(ConfigBase):
         self.use_wandb = True
         self.pytorch_data = '~/pytorch_data'
         self.tags = []
-        self.local_exp_dir = ''
+        self.local_exp_dir = 'runs'         # NOTE: if this == '', it means current folder
         self.tmp_dir = '~/tmp'
 
         self.print_verbose = 1  # level of print out, 0, 1, 2. by default print level 1, but not level 2 above

@@ -1,3 +1,4 @@
+from modulefinder import Module
 from easydl.algorithm.image_classification import train_image_classification_model_2021_nov
 from easydl.algorithm.metric_learning import *
 from easydl.config import RuntimeConfig, TrainingConfig, get_config_from_cmd
@@ -7,6 +8,7 @@ from easydl.image_transform import resnet_transform_test, resnet_transform_train
 from easydl.models.image_model import Resnet50PALVersion
 from easydl.models.mlp_model import EmbedderClassifier, LinearEmbedder
 from easydl.models.convnext import convnext_base, get_convnext_version_augmentation_config
+import os
 
 
 def convnext_exp():
@@ -38,7 +40,7 @@ def convnext_exp():
 
     # prepare model
     # because it's pre-trained on 22k, so, set num_classes = 21841
-    model = convnext_base(pretrained=train_cfg.pretrained, in_22k=True, num_classes=21841)
+    model = convnext_base(pretrained=train_cfg.pretrained, in_22k=True, num_classes=21841) 
     # replace the head with a linear embedder
     model.head = LinearEmbedder(model.head.in_features, algo_cfg.embedding_size)
     freezing_params = list(set(model.parameters()) - set(model.head.parameters()))
@@ -54,6 +56,14 @@ def convnext_exp():
         print('evaluting the model on testing data...')
         recall_at_k = cub_exp.evaluate_model(model)
         metric_logger.log({'recall@{}'.format(k): v for k, v in recall_at_k.items()})
+
+        # save model 
+        local_path = os.path.join(metric_logger.local_run_path, 'last_model.torch')
+        torch.save(model.state_dict(), local_path)
+        if metric_logger.get_best_step('recall@1') == metric_logger.current_step:
+            best_path = os.path.join(metric_logger.local_run_path, 'best_model.torch')
+            torch.save(model.state_dict(), best_path)
+
 
     # run experiment
     train_embedding_model_with_proxy_anchor_loss_with_warmup_freeze(model, cub_exp.train_ds, cub_exp.train_classes,

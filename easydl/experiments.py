@@ -1,31 +1,50 @@
 import warnings
-
+import numpy as np
 import os
-from collections import Counter
+from collections import Counter, defaultdict
 from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path, TrainingConfig
 import easydl
 
 
 class MetricLogger(object):
+    """
+    steps are all start from 1
+    """
+
     TrainLossMovingAverage = 'train_loss_mavg'
     TrainAccuracyMovingAverage = 'train_acc_mavg'
     TestAccuracy = 'test_accuracy'
     TrainAccuracy = 'train_accuracy'
     LastLr = 'last_lr'
 
-    def __init__(self, run_cfg:RuntimeConfig, *args, **kwargs):
+    def __init__(self, run_cfg:RuntimeConfig, *args, key_metric=None, **kwargs):
 
         self.run = None     # if None, wandb is not init or not used
         self.run_cfg = run_cfg
         if run_cfg.debug:
             print('!!! debug mode, wandb logger is not used.')
+            self.local_run_path = os.path.join(run_cfg.local_exp_dir, 'debug')
+            os.makedirs(self.local_run_path, exist_ok=True)
             return
         elif run_cfg.use_wandb:
             self.log_count = Counter()
             self._init_wandb(run_cfg)
+            self.local_run_path = os.path.join(run_cfg.local_exp_dir, run_cfg.project_name, self.run.name)
+            os.makedirs(self.local_run_path, exist_ok=True)
         else:
-            os.makedirs(run_cfg.local_exp_dir, exist_ok=True)
+            for i in range(1, 10000):
+                local_path = os.path.join(run_cfg.local_exp_dir, run_cfg.project_name, 'run-{}'.format(i))
+                if not os.path.exists(local_path):
+                    break
+
+            self.local_run_path = local_path
+            os.makedirs(run_cfg.local_run_path, exist_ok=True)
             print('Wandb is disabled...')
+        
+        self.metrics = defaultdict(list)       # key -> [ metric numbers (float) ], 
+        self.key_metric = key_metric
+        print('local dir for the run is', self.local_run_path)
+        
 
     def _init_wandb(self, run_cfg:RuntimeConfig):
         wandb_dir = expand_path(run_cfg.wandb_dir)
@@ -47,6 +66,7 @@ class MetricLogger(object):
             self.run.config.update(config_dict)
             return
 
+
     def log(self, metric_dict, step=None):
         """
 
@@ -54,20 +74,37 @@ class MetricLogger(object):
         :param step:            if all metrics are continous, then don't pass step, it will increase automatically
         :return:
         """
+
+        for k, v in metric_dict.items():
+            self.metrics[k].append(v)
+
         if self.run :
-            self.log_count.update(list(metric_dict.keys()))
             # if step is given, use it. otherwise, use the max step of metrics
-            self.run.log(metric_dict, step=step or max(self.log_count.values()))
+            self.run.log(metric_dict, step=step or self.current_step)
+
+            if self.key_metric and self.key_metric in metric_dict:
+                self.run.summary['best/{}'.format(self.key_metric)] = max(self.metrics[self.key_metric])
+                self.run.summary['best/step'] = self.metrics[self.key_metric].index() + 1
+            
+
+    def get_best_step(self, key):
+        return np.argmax(self.metrics[key]) + 1
+        
+    @property
+    def current_step(self):
+        return max(map(lambda x: len(x), self.metrics.values()))
+
 
     def get_path(self, rel_path):
-        if self.run:
-            return os.path.join(self.run.dir, rel_path)
-        else:
-            return os.path.join(self.run_cfg.local_exp_dir, rel_path)
+        return self.local_run_path
+
 
     def close(self):
         if self.run:
             self.run.finish()
+
+    
+
 
 
 def get_wandb_key(arg_name='wandb_key'):

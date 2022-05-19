@@ -143,6 +143,12 @@ class CubMetricLearningExperiment:
     def evaluate_model(self, model):
         model.eval()
         recall_at_k = recall_in_k_self_retrieval(model, self.test_ds, self.k_list)
-        print(recall_at_k)
+        return recall_at_k
+
+    def evaluate_model_on_train(self, model):
+        model.eval()
+        testing_transformer = self.test_ds.dataset.transform
+        train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=testing_transformer)
+        recall_at_k = recall_in_k_self_retrieval(model, train_ds, self.k_list)
         return recall_at_k
 

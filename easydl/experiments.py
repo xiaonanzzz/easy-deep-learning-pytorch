@@ -1,3 +1,4 @@
+import json
 import warnings
 import numpy as np
 import os
@@ -22,6 +23,9 @@ class MetricLogger(object):
 
         self.run = None     # if None, wandb is not init or not used
         self.run_cfg = run_cfg
+        self.config = {}
+        self.summary = {}
+
         if run_cfg.debug:
             print('!!! debug mode, wandb logger is not used.')
             self.local_run_path = os.path.join(run_cfg.local_exp_dir, 'debug')
@@ -64,7 +68,12 @@ class MetricLogger(object):
         print('updating config...', config_dict)
         if self.run:
             self.run.config.update(config_dict)
-            return
+            
+        self.config.update(config_dict)
+
+        save_path = os.path.join(self.local_run_path, 'config.json')
+        with open(save_path, 'w') as f:
+            json.dump(self.config, f, indent=1)
 
 
     def log(self, metric_dict, step=None):
@@ -90,6 +99,17 @@ class MetricLogger(object):
 
         save_path = os.path.join(self.local_run_path, 'metrics.csv')
         df.to_csv(save_path, index=False)
+
+    def set_summary(self, key, value):
+        self.summary[key] = value
+        
+        if self.run:
+            self.run.summary[key] = value
+        
+        save_path = os.path.join(self.local_run_path, 'summary.json')
+        with open(save_path, 'w') as f:
+            json.dump(self.summary, f, indent=1)
+        
         
 
     def get_best_step(self, key):

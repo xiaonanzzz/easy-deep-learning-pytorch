@@ -4,6 +4,7 @@ import os
 from collections import Counter, defaultdict
 from easydl.config import get_config_from_cmd, RuntimeConfig, expand_path, TrainingConfig
 import easydl
+import pandas as pd
 
 
 class MetricLogger(object):
@@ -42,7 +43,6 @@ class MetricLogger(object):
             print('Wandb is disabled...')
         
         self.metrics = defaultdict(list)       # key -> [ metric numbers (float) ], 
-        self.key_metric = key_metric
         print('local dir for the run is', self.local_run_path)
         
 
@@ -82,18 +82,23 @@ class MetricLogger(object):
             # if step is given, use it. otherwise, use the max step of metrics
             self.run.log(metric_dict, step=step or self.current_step)
 
-            if self.key_metric and self.key_metric in metric_dict:
-                self.run.summary['best/{}'.format(self.key_metric)] = max(self.metrics[self.key_metric])
-                self.run.summary['best/step'] = self.metrics[self.key_metric].index() + 1
-            
+        # save metrics to local file
+        names = [k for k in self.metrics]
+        dfs = [pd.DataFrame({k: self.metrics[k]}) for k in names]
+        df = pd.concat(dfs, ignore_index=True, axis=1)
+        df.columns = names
+
+        save_path = os.path.join(self.local_run_path, 'metrics.csv')
+        df.to_csv(save_path, index=False)
+        
 
     def get_best_step(self, key):
-        return np.argmax(self.metrics[key]) + 1
+        return np.argmax(self.metrics[key])
         
     @property
     def current_step(self):
-        return max(map(lambda x: len(x), self.metrics.values()))
-
+        # step starts from 0 for consistency
+        return max(map(lambda x: len(x), self.metrics.values())) - 1
 
     def get_path(self, rel_path):
         return self.local_run_path

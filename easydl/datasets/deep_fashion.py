@@ -34,14 +34,14 @@ def show_inshop_retrieval_dataset():
 class DeepFashionInshopExperiment:
     """
     Organize the data folder in this way
-    data_root/ 
+    ~/data/deepfashion_inshop/ 
         img/                            -> all images unzip from img.zip 
         list_eval_partition.txt         -> data partition file
             3 columns:  image_name, item_id, evaluation_status
     """
     def __init__(self, data_root='~/data/deepfashion_inshop'):
         
-        self.data_root = get_config_from_cmd('data_root', data_root)
+        self.data_root = data_root
         self.k_list = [1, 10, 20, 30]
         self.train_classes = 3997
 

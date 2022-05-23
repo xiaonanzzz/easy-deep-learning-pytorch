@@ -124,6 +124,9 @@ class Cub2011MetricLearningDS:
         return self.dataset[idx]
 
 
+
+
+
 class CubClassificationExperiment:
     def __init__(self, image_size):
         self.data_path = get_config_from_cmd('data_path', '~/data')
@@ -139,6 +142,17 @@ class CubMetricLearningExperiment:
         self.test_ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=resnet_transform_test)
         self.k_list = _metric_learning_evaluation_k_list
         self.train_classes = 100
+        self.testing_transform = resnet_transform_test
+
+        print('cub experiment, using default settings', resnet_transform_train, resnet_transform_test)
+
+    def get_test_ds(self, image_transform=None) -> ImageDataset:
+        ds = Cub2011MetricLearningDS(self.data_path, split='test', image_transform=image_transform)
+        return ds.dataset
+
+    def get_train_ds(self, image_transform=None) -> ImageDataset:
+        ds = Cub2011MetricLearningDS(self.data_path, split='train', image_transform=image_transform)
+        return ds.dataset
 
     def evaluate_model(self, model):
         model.eval()
@@ -147,8 +161,7 @@ class CubMetricLearningExperiment:
 
     def evaluate_model_on_train(self, model):
         model.eval()
-        testing_transformer = self.test_ds.dataset.transform
-        train_ds = Cub2011MetricLearningDS(self.data_path, image_transform=testing_transformer)
+        train_ds = self.get_train_ds(self.testing_transform)
         recall_at_k = recall_in_k_self_retrieval(model, train_ds, self.k_list)
         return recall_at_k
 

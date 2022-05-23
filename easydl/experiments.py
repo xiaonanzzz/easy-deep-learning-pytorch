@@ -110,7 +110,6 @@ class MetricLogger(object):
         with open(save_path, 'w') as f:
             json.dump(self.summary, f, indent=1)
         
-        
 
     def get_best_step(self, key):
         return np.argmax(self.metrics[key])

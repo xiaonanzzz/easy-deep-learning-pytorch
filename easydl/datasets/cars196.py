@@ -82,7 +82,7 @@ def get_data_split(data_root):
 
 class Cars196MetricLearningExp:
     def __init__(self, data_root='~/data/cars196'):
-        self.data_root = get_config_from_cmd('data_root', data_root)
+        self.data_root = data_root
         self.k_list = [1, 2, 4, 8]
         self.train_classes = 98
         self.df = get_data_split(data_root)

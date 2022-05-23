@@ -1,5 +1,6 @@
+import os
 import pandas as pd
-from sklearn.cluster import MeanShift
+from sklearn.cluster import MeanShift, AgglomerativeClustering, KMeans
 from sklearn.metrics import homogeneity_completeness_v_measure, fowlkes_mallows_score, adjusted_mutual_info_score
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -71,3 +72,53 @@ def tune_mean_shift(x, y,  bandwidth_range=None, save_path='meanshift-tune.csv',
     rows = pd.DataFrame(rows)
     prepare_path(save_path)
     rows.to_csv(save_path, index=False)
+
+
+def tune_ward_clustering(x, y, save_dir='', threshold_list=None, disable_tqdm=False):
+    # x, y are numpy arrays
+    from tqdm import tqdm
+
+    thresholds = threshold_list or [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.25, 1.5, 1.75, 2, 2.5, 3, 4]
+
+    rows = []
+    for th in tqdm(thresholds, disable=disable_tqdm):
+        cls = AgglomerativeClustering(n_clusters=None, linkage='ward', distance_threshold=th)
+        ypred = cls.fit_predict(x)
+        metrics1 = evaluate_clustering_with_labels(y, ypred, )
+
+        row = {'threshold': th}
+        row.update(metrics1)
+
+        rows.append(row)
+
+    rows = pd.DataFrame(rows)
+    if save_dir is not None:
+        os.makedirs(save_dir, exist_ok=True)
+        rows.to_csv(os.path.join(save_dir, 'ward-clustering-tunning.csv'), index=False)
+    else:
+        print(rows)
+
+
+def tune_kmeans(x, y, save_dir='', k_list=None, disable_tqdm=False):
+    # x, y are numpy arrays
+    from tqdm import tqdm
+
+    ks = k_list or [50, 77, 100, 150, 177, 200, 300]
+
+    rows = []
+    for k in tqdm(ks, disable=disable_tqdm, desc='tune kmeans'):
+        cls = KMeans(n_clusters=k)
+        ypred = cls.fit_predict(x)
+        metrics1 = evaluate_clustering_with_labels(y, ypred, )
+
+        row = {'k': k}
+        row.update(metrics1)
+
+        rows.append(row)
+
+    rows = pd.DataFrame(rows)
+    if save_dir is not None:
+        os.makedirs(save_dir, exist_ok=True)
+        rows.to_csv(os.path.join(save_dir, 'kmeans-clustering-tunning.csv'), index=False)
+    else:
+        print(rows)

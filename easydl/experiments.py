@@ -25,14 +25,14 @@ class MetricLogger(object):
         self.run_cfg = run_cfg
         self.config = {}
         self.summary = {}
+        self.metrics = defaultdict(list)       # key -> [ metric numbers (float) ], 
 
         if run_cfg.debug:
             print('!!! debug mode, wandb logger is not used.')
             self.local_run_path = os.path.join(run_cfg.local_exp_dir, 'debug')
             os.makedirs(self.local_run_path, exist_ok=True)
-            return
         elif run_cfg.use_wandb:
-            self.log_count = Counter()
+
             self._init_wandb(run_cfg)
             self.local_run_path = os.path.join(run_cfg.local_exp_dir, run_cfg.project_name, self.run.name)
             os.makedirs(self.local_run_path, exist_ok=True)
@@ -46,9 +46,8 @@ class MetricLogger(object):
             os.makedirs(run_cfg.local_run_path, exist_ok=True)
             print('Wandb is disabled...')
         
-        self.metrics = defaultdict(list)       # key -> [ metric numbers (float) ], 
         print('local dir for the run is', self.local_run_path)
-        
+
 
     def _init_wandb(self, run_cfg:RuntimeConfig):
         wandb_dir = expand_path(run_cfg.wandb_dir)
@@ -117,7 +116,8 @@ class MetricLogger(object):
     @property
     def current_step(self):
         # step starts from 0 for consistency
-        return max(map(lambda x: len(x), self.metrics.values())) - 1
+        lens = list(map(lambda x: len(x), self.metrics.values())) + [0] # avoid empty list error
+        return max(min(lens), max(lens) - 1)
 
     def get_path(self, rel_path):
         return self.local_run_path

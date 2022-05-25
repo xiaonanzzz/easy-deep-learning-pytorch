@@ -130,4 +130,5 @@ dmypy.json
 easydl/example/tmp/data/cifar-10-batches-py/data_batch_1
 /easydl/example/tmp/
 
+# ignore any runs/ folder, e.g. /runs, /xxx/runs/
 runs/

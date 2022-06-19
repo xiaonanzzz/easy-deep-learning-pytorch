@@ -1,3 +1,4 @@
+from cProfile import label
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -27,7 +28,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
     """
     epoch_end_hook will be called at the end of epoch, epoch_end_hook(locals=locals())
     """
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss(label_smoothing=train_cfg.label_smoothing)
     param_groups = [{'params': model.parameters(), 'lr': float(train_cfg.lr) * 1}]
 
     opt = prepare_optimizer(train_cfg, param_groups)

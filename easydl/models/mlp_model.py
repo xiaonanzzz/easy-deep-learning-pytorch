@@ -22,6 +22,17 @@ class L2Normalization(torch.nn.Module):
         return normalize(x, p=2, dim=self.dim)
 
 
+class L2NormEmbedder(torch.nn.Module):
+    def __init__(self, model, dim=1):
+        super(L2NormEmbedder, self).__init__()
+        self.model = model
+        self.dim = dim
+
+    def forward(self, x):
+        x = self.model(x)
+        return normalize(x, p=2, dim=self.dim)
+
+
 class LinearClassifier(torch.nn.Module):
     def __init__(self, in_features, num_classes):
         super(LinearClassifier, self).__init__()

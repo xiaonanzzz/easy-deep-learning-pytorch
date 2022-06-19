@@ -16,11 +16,16 @@ from easydl.datasets.cub import CubMetricLearningExperiment
 from easydl.experiments import MetricLogger
 from easydl.image_transform import resnet_transform_test, resnet_transform_train, timm_image_transform_imagenet_default
 from easydl.models.image_model import Resnet50PALVersion
-from easydl.models.mlp_model import EmbedderClassifier, LinearEmbedder, L2Normalization, Identity
+from easydl.models.mlp_model import EmbedderClassifier, LinearEmbedder, L2Normalization, Identity, L2NormEmbedder
 from easydl.models.convnext import convnext_base, get_convnext_version_augmentation_config
 from easydl.algorithm.image_classification import train_image_classification_model_2021_nov
+from easydl.batch_processing import batch_process_x_y_dataset_and_concat
+from easydl.datasets.image_dataset import ImageDataset
 
 import os
+
+from sklearn.cluster import AgglomerativeClustering
+
 
 def convnext_exp():
 
@@ -28,6 +33,7 @@ def convnext_exp():
     train_cfg = TrainingConfig(optimizer='adamw', lr=1e-4, weight_decay=1e-4, lr_scheduler_type='step',
                                lr_decay_step=5, train_batch_size=50, train_epoch=60, warmup_epoch=1)
     train_cfg.pretrained = True
+    train_cfg.ward_threshold = 2.0
     train_cfg.from_other(get_convnext_version_augmentation_config())
     train_cfg.update_values_from_cmd()
 
@@ -47,14 +53,42 @@ def convnext_exp():
     model = convnext_base(pretrained=train_cfg.pretrained, in_22k=True, num_classes=21841) 
     # replace the head with a linear embedder
     model.head = Identity()
-
-    embedder_classifier = EmbedderClassifier(model, 1024, cub_exp.train_classes)
     
-    cub_exp.train_ds.change_image_transform(timm_image_transform_imagenet_default(train_cfg))
     cub_exp.test_ds.change_image_transform(resnet_transform_test)
 
     metric_logger.update_config(train_cfg.dict())
     metric_logger.update_config(algo_cfg.dict())
+    train_img_transform = timm_image_transform_imagenet_default(train_cfg)
+
+    def merge_train_test() -> ImageDataset:
+        model.to(run_cfg.device)
+        model.eval()
+
+        normalized_model = L2NormEmbedder(model)
+
+        train_ds = cub_exp.get_train_ds()
+        test_ds = cub_exp.get_test_ds(cub_exp.testing_transform)    # using default transform
+        print('performing clustering on testing set to generate pseudo labels')
+        x, y = batch_process_x_y_dataset_and_concat(test_ds, normalized_model, tqdm_disable=False)
+
+        cls = AgglomerativeClustering(n_clusters=None, linkage='ward', distance_threshold=train_cfg.ward_threshold)
+        ypred = cls.fit_predict(x.numpy())
+        print('# clusters', len(set(ypred)))
+
+        impath = train_ds.im_paths
+        labels = list(map(lambda x: f'train-{x}', train_ds.labels))
+
+        impath.extend(test_ds.im_paths)
+        labels.extend(map(lambda x: f'test-{int(x)}', ypred))
+        print('last few labels', labels[-5])
+
+        train_ds = ImageDataset(impath, labels, transform=train_img_transform, verbose=True)
+        print('total number of classes', train_ds.num_labels)
+        return train_ds
+
+    train_ds = merge_train_test()
+    embedder_classifier = EmbedderClassifier(model, 1024, train_ds.num_labels)
+
 
     def epoch_end(**kwargs):
         print('evaluting the model on testing data...')
@@ -76,7 +110,7 @@ def convnext_exp():
     # run model training
      # run experiment
     train_image_classification_model_2021_nov(
-        embedder_classifier, cub_exp.train_ds, train_cfg, run_cfg, metric_logger,
+        embedder_classifier, train_ds, train_cfg, run_cfg, metric_logger,
         epoch_end_hook=epoch_end)
 
 if __name__ == '__main__':

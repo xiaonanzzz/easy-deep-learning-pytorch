@@ -90,6 +90,7 @@ class TrainingConfig(ConfigBase):
         self.momentum = 0.9
         self.nesterov = False
         self.clip_gradient = 10
+        self.label_smoothing = 0.0  # label smoothing in cross entropy loss
 
         # learning rate scheduler related configuration
         self.warmup_epoch = 1

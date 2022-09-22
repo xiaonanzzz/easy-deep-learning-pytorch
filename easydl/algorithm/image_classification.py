@@ -40,7 +40,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
         num_workers=run_cfg.cpu_workers,
         pin_memory=True
     )
-
+    
     for epoch in range(1, train_cfg.train_epoch + 1):
         losses_per_epoch = []
         acc_avg = TrainAccuracyAverage()
@@ -65,7 +65,7 @@ def train_image_classification_model_2021_nov(model, train_ds, train_cfg: Traini
             # plot info [optional]
             acc_avg.update(m, y)
             losses_per_epoch.append(loss.data.cpu().numpy())
-            pbar.set_postfix({'epoch': epoch,
+            pbar.set_postfix({'epoch': metric_logger.current_step,
                               'batch': batch_idx,
                               'numbatch': len(dl_tr),
                               'loss_mean': np.mean(losses_per_epoch),

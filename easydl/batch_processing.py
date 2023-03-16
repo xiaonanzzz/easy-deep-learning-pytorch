@@ -42,7 +42,7 @@ def process_dataset_by_batch(dataset, model, input_index=0, batch_size=32, save_
         return out, save
     return out
 
-def batch_process_x_y_dataset_and_concat(dataset, model, **kwargs):
+def batch_process_x_y_dataset_and_concat(dataset, model, to_numpy=False, **kwargs):
     """ Given a dataset consisting of input(x) and target(y),
     run the given <model> on <x> -> <x'>
     return x' and y
@@ -51,6 +51,8 @@ def batch_process_x_y_dataset_and_concat(dataset, model, **kwargs):
     x, y = process_dataset_by_batch(dataset, model, **kwargs)
     x = torch.cat(x, dim=0)
     y = torch.cat(y, dim=0)
+    if to_numpy:
+        return x.numpy(), y.numpy()
     return x, y
 
 def concat_tensors_in_list_of_tuple_given_index(tensor_list_tuple, index_in_tuple, concat_dim=0):

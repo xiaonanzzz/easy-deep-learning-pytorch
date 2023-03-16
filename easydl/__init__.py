@@ -32,6 +32,7 @@ __version__ = "3.5"
 from .config import *
 from .common import *
 from .experiments import MetricLogger
+from .batch_processing import process_dataset_by_batch, batch_process_x_y_dataset_and_concat
 
 
 

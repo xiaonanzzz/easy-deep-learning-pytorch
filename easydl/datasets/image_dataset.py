@@ -5,6 +5,21 @@ from pathlib import Path
 from torchvision.datasets.folder import default_loader
 import numpy as np
 
+class PureImageDataset:
+    def __init__(self, im_paths, transform=None):
+        self.im_paths = list(im_paths)
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.im_paths)
+
+    def __getitem__(self, index):
+        im = default_loader(self.im_paths[index])
+        if self.transform is not None:
+            im = self.transform(im)
+        return (im, index)
+    
+
 class ImageDataset:
     def __init__(self, im_paths, labels, transform=None, item_schema=('image', 'label_code')):
         """

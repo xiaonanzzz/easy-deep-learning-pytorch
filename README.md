@@ -12,6 +12,11 @@ conda deactivate
 ```
 # install pytorch 1.13 stable version
 # https://pytorch.org/get-started/locally/
+
+# torch 2.0 + cuda 11.7 | pip install
+pip3 install torch torchvision torchaudio
+
+# torch 2.0 + cpu | conda install
 conda install pytorch torchvision torchaudio cpuonly -c pytorch
 ```
 

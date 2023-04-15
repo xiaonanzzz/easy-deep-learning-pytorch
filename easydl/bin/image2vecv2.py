@@ -15,19 +15,19 @@ import logging
 from tqdm import tqdm
 import numpy as np
     
-class ImageUrlDataset:
-    def __init__(self, urls, transform=None):
-        self.urls = list(urls)
+class ImageDataset:
+    def __init__(self, images, transform=None):
+        self.images = list(images)
         self.transform = transform
 
     def __len__(self):
-        return len(self.urls)
+        return len(self.images)
 
     def __getitem__(self, index):
-        url = self.urls[index]
+        image_fp = self.images[index]
 
         try:
-            im = Image.open(requests.get(url, stream=True).raw).convert('RGB')
+            im = Image.open(image_fp).convert('RGB')
             valid = 1
         except:
             # create a black image
@@ -39,42 +39,39 @@ class ImageUrlDataset:
         return (im, index, valid)
     
 
-def _debug():
-
-    urls = ['https://m.media-amazon.com/images/I/7105+qtR0ML.jpg', 'https://m.media-amazon.com/images/I/7105+qtR0MLsfs.jpg']
-    ds = ImageUrlDataset(urls, transform=resnet_transform_test)
-    print(ds[0], ds[1])
-
 def main():
     parser = argparse.ArgumentParser(description="Transform images into vectors")
-    parser.add_argument("--input_csv", '-c', help="Image to be predicted", type=str)
+    parser.add_argument("--input_csv", '-c', help="Image to be predicted", type=str, required=True)
     parser.add_argument("--model", help="confidence threshold", default='convnext-base', type=str)
+    parser.add_argument('--image_root', default='', type=str, help='the root dir of image path')
     parser.add_argument('--batch_size', type=int, default=200, help='the batch size for splitting the original data')
-    parser.add_argument('--debug', type=int, default=0, help='debug mode, only run first few samples')
     parser.add_argument('--device', default='auto')
-    parser.add_argument('-o', '--out_dir', type=str, default='url2vec-{}'.format(str(datetime.today()).replace(' ', '-')))
+    parser.add_argument('-o', '--out_dir', type=str, default='tmp/image2vec-{}'.format(str(datetime.today()).replace(' ', '-')))
     args = parser.parse_args()
-
-    if args.debug:
-        _debug()
 
     # prepare run 
     batch_size = args.batch_size
     df = pd.read_csv(args.input_csv)
-    urls = df['url'].tolist()
+    # concat the iamge root with image path provided by csv
+    images = df['path'].map(lambda x: os.path.join(args.image_root, x))
+
     odir = Path(args.out_dir)
     odir.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(filemode=odir / 'url2vec.log', stream=sys.stdout, level=logging.INFO)
-    logger = logging.getLogger()
+    
+    logger = logging.getLogger('')
+    logger.addHandler(logging.FileHandler(odir / 'image2vec.log'))
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.INFO)
+
 
     if args.model == 'convnext-base':
         model = convnext_base(pretrained=True, in_22k=True, num_classes=21841)
         model.head = L2Normalization()
-        dataset = ImageUrlDataset(urls, resnet_transform_test)
+        dataset = ImageDataset(images, resnet_transform_test)
     else: 
         raise NotImplemented
     
-    logger.info(f'total urls: {len(urls)}')
+    logger.info(f'total images: {len(images)}')
 
 
     # run model on all dataset
@@ -104,7 +101,7 @@ def main():
     valid = []
 
 
-    for data_batch in tqdm(dl, desc='transforming urls to vectors'):
+    for data_batch in tqdm(dl, desc='transforming images to vectors'):
         with torch.autograd.no_grad():
             x = data_batch[0]
             x = x.to(device)
@@ -116,9 +113,10 @@ def main():
     vectors = torch.cat(out, dim=0).numpy()
     valid = torch.cat(valid, dim=0).numpy()
 
-    df = pd.DataFrame({'url': urls, 'valid': valid})
-    df.to_csv(odir / 'urls-valid.csv', index=False)
-    np.save(odir / 'url-vectors.npy', vectors)
+    df = pd.DataFrame({'path': images, 'valid': valid})
+    print('valid / total', df['valid'].sum(), df.shape[0])
+    df.to_csv(odir / 'image-valid.csv', index=False)
+    np.save(odir / 'image-vectors.npy', vectors)
     
 
 if __name__ == '__main__':
